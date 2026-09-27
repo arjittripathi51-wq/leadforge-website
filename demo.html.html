@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LeadForge AI — Live System Demo</title>
+<meta name="description" content="See the exact report your prospects receive, before your sales team ever picks up the phone.">
+<meta name="robots" content="noindex, nofollow">
+<!-- This page is intentionally not linked from the main site — shared
+     directly with prospects. noindex/nofollow keeps it out of search
+     results and stops crawlers from following its links, even if the
+     URL is ever discovered. -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:    #0C0B09;
+  --ink2:   #111009;
+  --ink3:   #171410;
+  --paper:  #F0EBE1;
+  --paper2: #D8D0C2;
+  --gold:   #C4A45E;
+  --goldD:  #8A6A32;
+  --goldL:  #E2C47A;
+  --ash:    #4A4438;
+  --fog:    #252018;
+  --line:   rgba(196,164,94,.15);
+  --lineL:  rgba(196,164,94,.32);
+  --serif:  'Cormorant Garamond',Georgia,serif;
+  --sans:   'DM Sans',sans-serif;
+  --mono:   'DM Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  background:var(--ink);color:var(--paper);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+
+.wrap{max-width:760px;margin:0 auto;padding:0 1.5rem}
+
+/* ── Top bar ── */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.6rem 0;border-bottom:1px solid var(--fog);
+}
+.tb-logo{font-family:var(--serif);font-size:1.15rem;color:var(--paper);letter-spacing:.02em}
+.tb-logo em{font-style:italic;color:var(--gold)}
+.tb-tag{font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ash)}
+
+/* ── Eyebrow ── */
+.eye{display:flex;align-items:center;gap:.85rem;margin:3.5rem 0 1.6rem}
+.eye-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:eye-pulse 2.4s ease infinite}
+@keyframes eye-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(1.6)}}
+.eye-txt{font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--goldD)}
+
+/* ── Headline / one-line explanation ── */
+h1{
+  font-family:var(--serif);font-weight:300;
+  font-size:clamp(2.1rem,5.5vw,3.4rem);
+  line-height:1.08;letter-spacing:-.01em;color:var(--paper);
+  margin-bottom:1.1rem;
+}
+h1 em{font-style:italic;color:var(--gold)}
+.sub{
+  font-size:.95rem;font-weight:300;color:var(--ash);
+  line-height:1.8;max-width:560px;margin-bottom:2.8rem;
+}
+.sub b{color:var(--paper);font-weight:400}
+
+/* ── Video block ── */
+.video-block{
+  position:relative;width:100%;aspect-ratio:16/9;
+  background:var(--ink2);border:1px solid var(--fog);
+  margin-bottom:3.5rem;overflow:hidden;
+}
+.video-block iframe,.video-block video{
+  width:100%;height:100%;display:block;border:none;object-fit:cover;
+}
+/* Placeholder state — remove this whole .video-placeholder div once the
+   real video embed (iframe/video tag) is dropped in below it. See the
+   swap comment in the HTML body for exact instructions. */
+.video-placeholder{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1rem;
+  background:linear-gradient(135deg,var(--ink2),var(--ink3));
+}
+.vp-play{
+  width:56px;height:56px;border-radius:50%;border:1.5px solid var(--goldD);
+  display:flex;align-items:center;justify-content:center;
+}
+.vp-play svg{width:16px;height:16px;margin-left:2px}
+.vp-txt{font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ash)}
+
+/* ── Section labels ── */
+.slabel{font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--goldD);margin-bottom:1rem}
+h2{
+  font-family:var(--serif);font-weight:300;font-size:1.55rem;
+  color:var(--paper);margin-bottom:1.8rem;letter-spacing:-.01em;
+}
+h2 em{font-style:italic;color:var(--gold)}
+
+/* ── What you'll receive ── */
+.receive-list{display:flex;flex-direction:column;gap:0;margin-bottom:4rem;border-top:1px solid var(--fog)}
+.receive-item{
+  display:flex;gap:1.4rem;padding:1.5rem 0;border-bottom:1px solid var(--fog);
+}
+.ri-n{font-family:var(--serif);font-size:.85rem;color:var(--goldD);flex-shrink:0;width:1.6rem;padding-top:.15rem}
+.ri-body{flex:1}
+.ri-ttl{font-size:.92rem;font-weight:500;color:var(--paper);margin-bottom:.4rem}
+.ri-desc{font-size:.82rem;font-weight:300;color:var(--ash);line-height:1.7}
+
+/* ── Live test panel ── */
+.test-panel{
+  border:1px solid var(--fog);background:var(--ink2);
+  padding:2rem;margin-bottom:4rem;
+}
+.test-head{margin-bottom:1.6rem}
+.test-note{
+  display:flex;align-items:flex-start;gap:.6rem;
+  margin-top:1.25rem;padding:.85rem 1rem;
+  border:1px solid var(--fog);background:rgba(196,164,94,.04);
+}
+.test-note-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:.3rem}
+.test-note-txt{font-family:var(--mono);font-size:.6rem;letter-spacing:.03em;color:var(--ash);line-height:1.7}
+.test-note-txt b{color:var(--goldL);font-weight:500}
+
+.tf-embed-outer{background:var(--ink);border:1px solid var(--fog);overflow:hidden}
+.tf-embed-inner{position:relative;min-height:600px}
+.tf-embed-inner iframe{width:100%;height:100%;min-height:600px;display:block;border:none}
+
+/* ── CTA ── */
+.cta-block{
+  text-align:center;padding:3.5rem 0 4.5rem;border-top:1px solid var(--fog);
+}
+.cta-h{font-family:var(--serif);font-weight:300;font-size:1.5rem;color:var(--paper);margin-bottom:.8rem}
+.cta-h em{font-style:italic;color:var(--gold)}
+.cta-p{font-size:.85rem;font-weight:300;color:var(--ash);margin-bottom:1.8rem;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.75}
+
+.btn-g{
+  display:inline-flex;align-items:center;gap:.6rem;
+  padding:.9rem 2.2rem;background:var(--gold);color:var(--ink);
+  font-family:var(--sans);font-size:.75rem;font-weight:500;
+  letter-spacing:.15em;text-transform:uppercase;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:all .25s;
+  clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+}
+.btn-g:hover{background:var(--goldL);transform:translateY(-2px);box-shadow:0 8px 30px rgba(196,164,94,.28)}
+
+footer{
+  border-top:1px solid var(--fog);padding:1.8rem 0;
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:.6rem;letter-spacing:.05em;color:var(--ash);
+}
+
+@media(max-width:640px){
+  .receive-item{flex-direction:column;gap:.4rem}
+  .ri-n{width:auto}
+  .tf-embed-inner{min-height:520px}
+  .tf-embed-inner iframe{min-height:520px}
+  footer{flex-direction:column;gap:.6rem;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="tb-logo">LeadForge<em>AI</em></div>
+    <div class="tb-tag">Live System Demo</div>
+  </div>
+
+  <div class="eye">
+    <span class="eye-dot"></span>
+    <span class="eye-txt">C&amp;I Solar Revenue Infrastructure</span>
+  </div>
+
+  <!-- ONE-LINE EXPLANATION -->
+  <h1>Your prospect sees this.<br><em>Before you ever call.</em></h1>
+  <p class="sub">What's below is the actual system — not a preview. Watch how it works, or submit real details yourself and receive the exact report your prospects would get.</p>
+
+  <!-- ══════ VIDEO ══════ -->
+  <div class="video-block">
+    <!--
+      SWAP INSTRUCTIONS:
+      1. Delete the entire <div class="video-placeholder">...</div> block below.
+      2. In its place, paste your embed — either:
+         a) An iframe (YouTube/Loom/Vimeo), e.g.:
+            <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>
+         b) A native video tag, e.g.:
+            <video src="your-video.mp4" controls poster="thumbnail.jpg"></video>
+      Nothing else on this page needs to change.
+    -->
+    <div class="video-placeholder">
+      <div class="vp-play">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M2 1.5L14 8L2 14.5V1.5Z" fill="#C4A45E"/></svg>
+      </div>
+      <span class="vp-txt">Demo video — landing shortly</span>
+    </div>
+  </div>
+
+  <!-- ══════ WHAT YOU'LL RECEIVE ══════ -->
+  <div class="slabel">What The System Produces</div>
+  <h2>Not a template.<br><em>A financial document.</em></h2>
+
+  <div class="receive-list">
+    <div class="receive-item">
+      <span class="ri-n">01</span>
+      <div class="ri-body">
+        <div class="ri-ttl">A satellite image of the actual property</div>
+        <div class="ri-desc">Not a stock rooftop icon. Real imagery of the exact site the prospect entered — one glance tells them this is theirs, not a template.</div>
+      </div>
+    </div>
+    <div class="receive-item">
+      <span class="ri-n">02</span>
+      <div class="ri-body">
+        <div class="ri-ttl">A 25-year financial model, year by year</div>
+        <div class="ri-desc">Not a single blended savings number. A year-by-year table — so a facility manager sees exactly when the system pays for itself, not just that it eventually does.</div>
+      </div>
+    </div>
+    <div class="receive-item">
+      <span class="ri-n">03</span>
+      <div class="ri-body">
+        <div class="ri-ttl">NPV and IRR — the metrics a CFO actually asks for</div>
+        <div class="ri-desc">The two numbers that decide whether a commercial project clears finance committee — calculated, not estimated. The exact figures a deal needs to get approved.</div>
+      </div>
+    </div>
+    <div class="receive-item">
+      <span class="ri-n">04</span>
+      <div class="ri-body">
+        <div class="ri-ttl">Delivered in under 2 minutes</div>
+        <div class="ri-desc">By the time your rep sees the notification, the prospect has already read their numbers. Your team stops explaining ROI and starts having the actual buying conversation.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ LIVE TEST ══════ -->
+  <div class="slabel">Try It Yourself</div>
+  <div class="test-panel">
+    <div class="test-head">
+      <h2 style="margin-bottom:.6rem">Submit real details.<br><em>Receive the real report.</em></h2>
+      <p class="sub" style="margin-bottom:0">This is the production system — the same one your prospects will use. Submit it with a real email to see exactly what arrives.</p>
+      <div class="test-note">
+        <span class="test-note-dot"></span>
+        <span class="test-note-txt"><b>Note:</b> this submits to the live system — use a real email, the report will actually arrive.</span>
+      </div>
+    </div>
+
+    <div class="tf-embed-outer">
+      <div class="tf-embed-inner">
+        <iframe
+          id="demo-tally-frame"
+          src=""
+          data-src="https://tally.so/embed/b566lZ?hideTitle=1&transparentBackground=1&dynamicHeight=1"
+          loading="lazy"
+          frameborder="0"
+          marginheight="0"
+          marginwidth="0"
+          allow="fullscreen"
+          title="C&I Solar Savings Report — Live Demo">
+        </iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ CTA ══════ -->
+  <div class="cta-block">
+    <div class="cta-h">Ready to put this on <em>your</em> site?</div>
+    <p class="cta-p">Tell us your lead volume and where your pipeline breaks down. We'll respond with a precise scope and monthly investment within 24 hours.</p>
+    <a href="/#contact" class="btn-g">Discuss Implementation <span>→</span></a>
+  </div>
+
+  <footer>
+    <span>© 2025 LeadForge AI</span>
+    <span>C&amp;I Solar Revenue Infrastructure · US &amp; UK Markets</span>
+  </footer>
+
+</div>
+
+<script>
+// Lazy-load the Tally iframe only once it's actually scrolled into view —
+// keeps the page fast for the video/copy above the fold.
+(function(){
+  var frame = document.getElementById('demo-tally-frame');
+  if (!frame) return;
+  var loaded = false;
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting && !loaded) {
+        frame.src = frame.dataset.src;
+        loaded = true;
+        obs.disconnect();
+      }
+    });
+  }, { threshold: 0.1 });
+  obs.observe(frame);
+})();
+</script>
+
+<!--
+  ═══════════════════════════════════════════════════════════════════
+  LEADFORGE AI — TALLY SUBMISSION LOADING WIDGET  (v1.3, portable)
+  ═══════════════════════════════════════════════════════════════════
+  WHAT THIS IS
+  A drop-in "labor illusion" loading screen. When a Tally form on the
+  page is submitted, this widget intercepts the submission event and
+  shows a full-screen sequence of steps ("Analyzing your commercial
+  property...", "Calculating subsidy...", etc.) before revealing a
+  completion state. Makes instant/async backend processing feel real.
+
+  HOW TO INSTALL ON A NEW CLIENT SITE (3 steps, no other code changes)
+  1. Paste this entire block anywhere before the closing </body> tag.
+  2. Edit ONLY the config object below (steps, timing, colors, text).
+  3. Done. It listens for Tally's own submission event globally — no
+     iframe IDs to match, no other page wiring, nothing else changes.
+
+  WHY IT'S SAFE TO DROP INTO ANY SITE
+  - All CSS is scoped under the .lfw- prefix — cannot collide with
+    the host site's existing styles.
+  - Runs as a single self-invoking function — leaves only two global
+    references behind: window.LFLoader (manual show/hide for testing)
+    and window.__LF_LOADER_LOADED__ (the double-inclusion guard).
+  - Guards against being pasted twice on the same page (a common
+    real-world mistake: once via header, once via footer/tag manager).
+  - Checks postMessage origin against tally.so by default, rejecting
+    spoofed events from ad iframes or unrelated third-party scripts.
+  - No external dependencies. No frameworks. Vanilla JS + CSS only.
+  ═══════════════════════════════════════════════════════════════════
+-->
+<script>
+(function () {
+  'use strict';
+
+  if (window.__LF_LOADER_LOADED__) return;
+  window.__LF_LOADER_LOADED__ = true;
+
+  var LF_LOADER_CONFIG = {
+    steps: [
+      'Analyzing your commercial property…',
+      'Pulling utility rate data…',
+      'Calculating C&I system size…',
+      'Calculating subsidy eligibility…',
+      'Generating your personalised report…'
+    ],
+    stepDuration: 1000,
+    completeTitle: 'Your report is on its way.',
+    completeSubtext: "Check your inbox in the next few minutes. If it doesn't appear, check your spam or promotions folder — some email firewalls flag reports with multiple links.",
+    accentColor: '#c4a45e',
+    bgColor: '#0c0b09',
+    textColor: '#f4f1ea',
+    mutedColor: '#7a756a',
+    fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+    restrictToTallyOrigin: true,
+    lockOverlay: true
+  };
+
+  var cfg = LF_LOADER_CONFIG;
+  var currentStepIndex = -1;
+  var stepTimer = null;
+  var pctAnimFrame = null;
+
+  function animateStepPercent(stepEl, duration) {
+    if (pctAnimFrame) cancelAnimationFrame(pctAnimFrame);
+    var pctEl = stepEl.querySelector('[data-pct]');
+    if (!pctEl) return;
+    var start = Date.now();
+    function tick() {
+      var elapsed = Date.now() - start;
+      var pct = Math.min(99, Math.floor((elapsed / duration) * 100));
+      pctEl.textContent = pct + '%';
+      if (elapsed < duration) {
+        pctAnimFrame = requestAnimationFrame(tick);
+      }
+    }
+    tick();
+  }
+
+  function injectStyles() {
+    if (document.getElementById('lfw-styles')) return;
+    var css = [
+      '.lfw-overlay{position:fixed;inset:0;z-index:99999;display:none;',
+      'align-items:center;justify-content:center;padding:1.5rem;',
+      'background:' + cfg.bgColor + 'f2;backdrop-filter:blur(10px);',
+      '-webkit-backdrop-filter:blur(10px);',
+      'font-family:' + cfg.fontFamily + ';',
+      'opacity:0;transition:opacity .35s ease;box-sizing:border-box}',
+      '.lfw-overlay.lfw-visible{display:flex;opacity:1}',
+      '.lfw-panel{width:100%;max-width:440px;text-align:left;box-sizing:border-box}',
+      '.lfw-panel *{box-sizing:border-box}',
+      '.lfw-badge{display:flex;align-items:center;gap:.5rem;margin-bottom:1.75rem}',
+      '.lfw-badge-dot{width:7px;height:7px;border-radius:50%;',
+      'background:' + cfg.accentColor + ';flex-shrink:0;',
+      'animation:lfw-pulse 1.6s ease infinite}',
+      '.lfw-badge-txt{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;',
+      'color:' + cfg.accentColor + ';font-weight:500}',
+      '@keyframes lfw-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(1.7)}}',
+      '.lfw-steps{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem}',
+      '.lfw-step{display:flex;align-items:center;gap:.85rem;opacity:.32;',
+      'transition:opacity .3s ease}',
+      '.lfw-step.lfw-active{opacity:1}',
+      '.lfw-step.lfw-done{opacity:.65}',
+      '.lfw-step-icon{width:20px;height:20px;flex-shrink:0;border-radius:50%;',
+      'border:1.5px solid ' + cfg.mutedColor + ';position:relative;',
+      'display:flex;align-items:center;justify-content:center;transition:all .3s ease}',
+      '.lfw-step.lfw-active .lfw-step-icon{border-color:' + cfg.accentColor + '}',
+      '.lfw-step.lfw-done .lfw-step-icon{border-color:' + cfg.accentColor + ';',
+      'background:' + cfg.accentColor + '}',
+      '.lfw-spinner{width:10px;height:10px;border-radius:50%;',
+      'border:1.5px solid transparent;border-top-color:' + cfg.accentColor + ';',
+      'animation:lfw-spin .7s linear infinite}',
+      '@keyframes lfw-spin{to{transform:rotate(360deg)}}',
+      '.lfw-check{width:10px;height:7px;opacity:0;transition:opacity .2s ease}',
+      '.lfw-step.lfw-done .lfw-check{opacity:1}',
+      '.lfw-step.lfw-done .lfw-spinner{display:none}',
+      '.lfw-step-txt{font-size:.85rem;font-weight:400;color:' + cfg.textColor + ';',
+      'line-height:1.4}',
+      '.lfw-step-pct{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;',
+      'font-size:.7rem;color:' + cfg.accentColor + ';margin-left:auto;',
+      'min-width:2.4em;text-align:right;opacity:0;transition:opacity .2s ease;',
+      'flex-shrink:0;letter-spacing:.02em}',
+      '.lfw-step.lfw-active .lfw-step-pct{opacity:1}',
+      '.lfw-progress-track{width:100%;height:2px;background:' + cfg.mutedColor + '33;',
+      'border-radius:2px;overflow:hidden;margin-bottom:2rem}',
+      '.lfw-progress-fill{height:100%;background:' + cfg.accentColor + ';',
+      'width:0%;transition:width .4s ease}',
+      '.lfw-complete{display:none;text-align:center;padding-top:.5rem}',
+      '.lfw-complete.lfw-show{display:block}',
+      '.lfw-complete-icon{width:44px;height:44px;border-radius:50%;',
+      'background:' + cfg.accentColor + ';display:flex;align-items:center;',
+      'justify-content:center;margin:0 auto 1.25rem}',
+      '.lfw-complete-title{font-size:1.05rem;font-weight:500;',
+      'color:' + cfg.textColor + ';margin-bottom:.4rem}',
+      '.lfw-complete-sub{font-size:.78rem;color:' + cfg.mutedColor + ';line-height:1.6}',
+      '.lfw-hidden{display:none!important}'
+    ].join('');
+    var style = document.createElement('style');
+    style.id = 'lfw-styles';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function buildOverlay() {
+    if (document.getElementById('lfw-overlay')) return;
+    var overlay = document.createElement('div');
+    overlay.id = 'lfw-overlay';
+    overlay.className = 'lfw-overlay';
+
+    var stepsHtml = cfg.steps.map(function (label, i) {
+      return (
+        '<div class="lfw-step" data-step="' + i + '">' +
+          '<span class="lfw-step-icon">' +
+            '<span class="lfw-spinner"></span>' +
+            '<svg class="lfw-check" viewBox="0 0 10 7" fill="none">' +
+              '<path d="M1 3.5L3.5 6L9 1" stroke="' + cfg.bgColor + '" stroke-width="1.6" ' +
+              'stroke-linecap="round" stroke-linejoin="round"/>' +
+            '</svg>' +
+          '</span>' +
+          '<span class="lfw-step-txt">' + label + '</span>' +
+          '<span class="lfw-step-pct" data-pct>0%</span>' +
+        '</div>'
+      );
+    }).join('');
+
+    overlay.innerHTML =
+      '<div class="lfw-panel">' +
+        '<div class="lfw-badge">' +
+          '<span class="lfw-badge-dot"></span>' +
+          '<span class="lfw-badge-txt">Processing your submission</span>' +
+        '</div>' +
+        '<div class="lfw-progress-track"><div class="lfw-progress-fill" id="lfw-progress"></div></div>' +
+        '<div class="lfw-steps" id="lfw-steps">' + stepsHtml + '</div>' +
+        '<div class="lfw-complete" id="lfw-complete">' +
+          '<div class="lfw-complete-icon">' +
+            '<svg width="18" height="14" viewBox="0 0 18 14" fill="none">' +
+              '<path d="M1 7L6.5 12.5L17 1.5" stroke="' + cfg.bgColor + '" stroke-width="2" ' +
+              'stroke-linecap="round" stroke-linejoin="round"/>' +
+            '</svg>' +
+          '</div>' +
+          '<div class="lfw-complete-title">' + cfg.completeTitle + '</div>' +
+          '<div class="lfw-complete-sub">' + cfg.completeSubtext + '</div>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    if (!cfg.lockOverlay) {
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) hide();
+      });
+    }
+  }
+
+  function setStep(index) {
+    var stepEls = document.querySelectorAll('#lfw-steps .lfw-step');
+    stepEls.forEach(function (el, i) {
+      el.classList.remove('lfw-active', 'lfw-done');
+      var pctEl = el.querySelector('[data-pct]');
+      if (i < index) {
+        el.classList.add('lfw-done');
+        if (pctEl) pctEl.textContent = '';
+      }
+      if (i === index) {
+        el.classList.add('lfw-active');
+        if (pctEl) pctEl.textContent = '0%';
+        animateStepPercent(el, cfg.stepDuration);
+      }
+    });
+    var progress = document.getElementById('lfw-progress');
+    if (progress) {
+      var pct = Math.min(100, Math.round(((index + 1) / cfg.steps.length) * 100));
+      progress.style.width = pct + '%';
+    }
+  }
+
+  function runSequence() {
+    currentStepIndex = 0;
+    setStep(0);
+    if (stepTimer) clearInterval(stepTimer);
+    stepTimer = setInterval(function () {
+      currentStepIndex++;
+      if (currentStepIndex >= cfg.steps.length) {
+        clearInterval(stepTimer);
+        stepEls_markAllDone();
+        showComplete();
+        return;
+      }
+      setStep(currentStepIndex);
+    }, cfg.stepDuration);
+  }
+
+  function stepEls_markAllDone() {
+    if (pctAnimFrame) cancelAnimationFrame(pctAnimFrame);
+    var stepEls = document.querySelectorAll('#lfw-steps .lfw-step');
+    stepEls.forEach(function (el) {
+      el.classList.remove('lfw-active');
+      el.classList.add('lfw-done');
+      var pctEl = el.querySelector('[data-pct]');
+      if (pctEl) pctEl.textContent = '';
+    });
+    var progress = document.getElementById('lfw-progress');
+    if (progress) progress.style.width = '100%';
+  }
+
+  function showComplete() {
+    var stepsWrap = document.getElementById('lfw-steps');
+    var complete = document.getElementById('lfw-complete');
+    var progressTrack = document.querySelector('.lfw-progress-track');
+    if (stepsWrap) stepsWrap.classList.add('lfw-hidden');
+    if (progressTrack) progressTrack.classList.add('lfw-hidden');
+    if (complete) complete.classList.add('lfw-show');
+  }
+
+  function show() {
+    injectStyles();
+    buildOverlay();
+    var stepsWrap = document.getElementById('lfw-steps');
+    var complete = document.getElementById('lfw-complete');
+    var progressTrack = document.querySelector('.lfw-progress-track');
+    if (stepsWrap) stepsWrap.classList.remove('lfw-hidden');
+    if (progressTrack) progressTrack.classList.remove('lfw-hidden');
+    if (complete) complete.classList.remove('lfw-show');
+    var overlay = document.getElementById('lfw-overlay');
+    overlay.classList.add('lfw-visible');
+    document.body.style.overflow = 'hidden';
+    runSequence();
+  }
+
+  function hide() {
+    var overlay = document.getElementById('lfw-overlay');
+    if (overlay) overlay.classList.remove('lfw-visible');
+    document.body.style.overflow = '';
+    if (stepTimer) clearInterval(stepTimer);
+    if (pctAnimFrame) cancelAnimationFrame(pctAnimFrame);
+  }
+
+  window.addEventListener('message', function (event) {
+    if (cfg.restrictToTallyOrigin && event.origin.indexOf('tally.so') === -1) {
+      return;
+    }
+    var data = event.data;
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch (e) { return; }
+    }
+    if (!data || typeof data !== 'object') return;
+    if (data.event === 'Tally.FormSubmitted') {
+      show();
+    }
+  });
+
+  window.LFLoader = { show: show, hide: hide, config: cfg };
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadForge AI — AI Automation for Solar Companies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/SplitText.min.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════ */
+:root{
+  --ink:    #0C0B09;
+  --ink2:   #111009;
+  --ink3:   #171410;
+  --paper:  #F0EBE1;
+  --paper2: #D8D0C2;
+  --gold:   #C4A45E;
+  --goldD:  #8A6A32;
+  --goldL:  #E2C47A;
+  --rust:   #8B3A2A;
+  --rustL:  #B04030;
+  --ash:    #4A4438;
+  --fog:    #252018;
+  --line:   rgba(196,164,94,.15);
+  --lineL:  rgba(196,164,94,.32);
+  --serif:  'Cormorant Garamond',Georgia,serif;
+  --sans:   'DM Sans',sans-serif;
+  --mono:   'DM Mono',monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{
+  background:var(--ink);color:var(--paper);
+  font-family:var(--sans);overflow-x:hidden;
+  cursor:none;-webkit-font-smoothing:antialiased;
+}
+::selection{background:rgba(196,164,94,.2)}
+::-webkit-scrollbar{width:2px}
+::-webkit-scrollbar-track{background:var(--ink)}
+::-webkit-scrollbar-thumb{background:var(--goldD)}
+
+/* ═══════════════════════════════════════
+   CINEMATIC LOADER
+═══════════════════════════════════════ */
+#loader{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--ink);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  pointer-events:none;
+}
+.loader-logo{
+  font-family:var(--serif);font-size:2rem;
+  font-weight:300;font-style:italic;
+  color:var(--paper);letter-spacing:.1em;
+  opacity:0;transform:translateY(20px);
+}
+.loader-logo span{color:var(--gold);font-style:normal;font-weight:300}
+.loader-bar-wrap{
+  width:200px;height:1px;
+  background:var(--fog);margin-top:2rem;
+  overflow:hidden;opacity:0;
+}
+.loader-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--goldD),var(--gold));
+}
+.loader-pct{
+  font-family:var(--mono);font-size:.6rem;
+  color:var(--ash);letter-spacing:.15em;
+  margin-top:.8rem;opacity:0;
+}
+
+/* ═══════════════════════════════════════
+   CURSOR
+═══════════════════════════════════════ */
+#cur,#cur-r{
+  position:fixed;pointer-events:none;
+  border-radius:50%;transform:translate(-50%,-50%);z-index:8999;
+}
+#cur{
+  width:6px;height:6px;background:var(--gold);
+  box-shadow:0 0 8px var(--gold);z-index:8999;
+  transition:width .15s,height .15s,background .2s,opacity .3s;
+}
+#cur-r{
+  width:28px;height:28px;
+  border:1px solid rgba(196,164,94,.35);z-index:8998;
+  transition:width .2s,height .2s,border-color .2s;
+}
+body.hov #cur{width:5px;height:5px;background:var(--rust)}
+body.hov #cur-r{width:46px;height:46px;border-color:rgba(139,58,42,.4)}
+
+/* ═══════════════════════════════════════
+   THREE.JS BG
+═══════════════════════════════════════ */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55}
+
+/* ═══════════════════════════════════════
+   OVERLAYS
+═══════════════════════════════════════ */
+#grain{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  background-size:256px;opacity:.5;mix-blend-mode:overlay;
+}
+#vig{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 45%,rgba(12,11,9,.75) 100%);
+}
+
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.6rem 3rem;
+  transition:all .5s cubic-bezier(.16,1,.3,1);
+  opacity:0;/* revealed by GSAP */
+}
+nav.stuck{
+  background:rgba(12,11,9,.95);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--line);
+  padding:1rem 3rem;
+}
+.n-logo{
+  font-family:var(--serif);font-size:1.25rem;
+  font-weight:600;font-style:italic;
+  color:var(--paper);letter-spacing:.04em;cursor:default;
+}
+.n-logo b{font-style:normal;font-weight:300;color:var(--gold);letter-spacing:.1em}
+.n-links{display:flex;gap:2.5rem;list-style:none}
+.n-links a{
+  font-size:.7rem;font-weight:400;
+  letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ash);text-decoration:none;transition:color .2s;
+}
+.n-links a:hover{color:var(--gold)}
+.n-cta{
+  font-size:.68rem;font-weight:500;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink);background:var(--gold);
+  border:none;padding:.58rem 1.5rem;cursor:pointer;
+  font-family:var(--sans);text-decoration:none;
+  transition:background .25s,transform .15s;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.n-cta:hover{background:var(--goldL);transform:translateY(-1px)}
+
+/* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+#hero{
+  position:relative;z-index:2;
+  min-height:100vh;
+  display:grid;grid-template-rows:1fr auto;
+  overflow:hidden;
+}
+.hero-body{
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:flex-start;
+  padding:10rem 3rem 4rem;
+  max-width:1140px;margin:0 auto;width:100%;
+}
+.h-eye{
+  display:flex;align-items:center;gap:1rem;
+  margin-bottom:2.5rem;overflow:hidden;
+}
+.h-eye-line{width:0;height:1px;background:var(--gold)}
+.h-eye-txt{
+  font-family:var(--mono);font-size:.62rem;font-weight:300;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--goldD);
+  opacity:0;transform:translateX(-10px);
+}
+
+/* Split-text headline */
+.hero-h{
+  font-family:var(--serif);font-weight:300;
+  font-size:clamp(3.5rem,8vw,8rem);
+  line-height:.95;letter-spacing:-.02em;
+  color:var(--paper);margin-bottom:1rem;
+  overflow:visible;
+}
+.hero-h .line{display:block;overflow:hidden}
+.hero-h .line-inner{display:block;transform:translateY(110%)}
+.hero-h em{font-style:italic;color:var(--gold)}
+.hero-h strong{font-weight:600}
+
+.hero-p{
+  font-size:1rem;font-weight:300;color:var(--ash);
+  line-height:1.85;max-width:460px;margin-bottom:3rem;
+  opacity:0;transform:translateY(20px);
+}
+.hero-p b{color:var(--paper);font-weight:400}
+
+.hero-btns{
+  display:flex;gap:1.2rem;align-items:center;
+  opacity:0;transform:translateY(20px);
+}
+
+/* ─ Buttons ─ */
+.btn-g{
+  display:inline-flex;align-items:center;gap:.6rem;
+  padding:.9rem 2.2rem;background:var(--gold);color:var(--ink);
+  font-family:var(--sans);font-size:.75rem;font-weight:500;
+  letter-spacing:.15em;text-transform:uppercase;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:all .25s;
+  clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+}
+.btn-g:hover{background:var(--goldL);transform:translateY(-2px);box-shadow:0 8px 30px rgba(196,164,94,.28)}
+.btn-o{
+  display:inline-flex;align-items:center;gap:.6rem;
+  padding:.9rem 2.2rem;background:transparent;color:var(--ash);
+  font-family:var(--sans);font-size:.75rem;font-weight:400;
+  letter-spacing:.15em;text-transform:uppercase;
+  text-decoration:none;border:1px solid var(--fog);cursor:pointer;
+  transition:all .25s;
+}
+.btn-o:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ─ Ticker ─ */
+.h-ticker{
+  padding:1.2rem 3rem;
+  border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:3rem;
+  overflow:hidden;opacity:0;
+}
+.tk{display:flex;align-items:baseline;gap:.6rem;white-space:nowrap;flex-shrink:0}
+.tk-n{
+  font-family:var(--serif);font-size:1.8rem;
+  font-weight:300;font-style:italic;color:var(--gold);
+}
+.tk-l{
+  font-size:.65rem;font-weight:400;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ash);
+}
+.tk-div{width:1px;height:28px;background:var(--line);flex-shrink:0}
+
+/* ─ Terminal ─ */
+.hero-term{
+  position:absolute;right:3rem;top:50%;
+  transform:translateY(-50%) translateX(60px);
+  width:420px;opacity:0;
+}
+.term{
+  background:rgba(16,14,8,.94);
+  border:1px solid var(--line);border-radius:3px;overflow:hidden;
+  box-shadow:0 40px 80px rgba(0,0,0,.7),0 0 0 1px var(--fog),0 0 50px rgba(196,164,94,.04);
+  transition:transform .4s cubic-bezier(.16,1,.3,1);
+}
+.term-bar{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.75rem 1rem;border-bottom:1px solid var(--fog);
+  background:rgba(0,0,0,.3);
+}
+.td{width:9px;height:9px;border-radius:50%;opacity:.65}
+.term-ttl{
+  margin-left:auto;font-family:var(--mono);
+  font-size:.6rem;color:var(--ash);letter-spacing:.07em;
+}
+.term-body{padding:1.1rem;font-family:var(--mono);font-size:.7rem;line-height:1.95}
+.tl{display:flex;gap:.55rem;margin-bottom:.05rem}
+.tp{color:var(--goldD);flex-shrink:0}
+.tc{color:var(--paper2)}
+.tcm{color:var(--ash)}
+.tok{color:#7CB87A}
+.twn{color:var(--gold)}
+.terr{color:var(--rustL)}
+.tdm{color:var(--fog)}
+.tcur{
+  display:inline-block;width:6px;height:.85em;
+  background:var(--gold);vertical-align:text-bottom;
+  animation:blink 1s step-end infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* stat floats */
+.sf{
+  position:absolute;
+  background:rgba(16,14,8,.96);
+  border:1px solid var(--line);
+  padding:.85rem 1.1rem;border-radius:2px;
+  box-shadow:0 16px 50px rgba(0,0,0,.6);
+}
+.sf1{bottom:-22px;left:-32px;animation:fA 5s ease-in-out infinite}
+.sf2{top:-22px;right:-22px;animation:fB 4s ease-in-out infinite}
+.sf-n{font-family:var(--serif);font-size:1.5rem;font-weight:300;font-style:italic;color:var(--gold)}
+.sf-l{font-size:.58rem;font-weight:300;letter-spacing:.1em;text-transform:uppercase;color:var(--ash);margin-top:1px}
+@keyframes fA{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-8px) rotate(-1deg)}}
+@keyframes fB{0%,100%{transform:translateY(0) rotate(1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+
+/* ═══════════════════════════════════════
+   MARQUEE
+═══════════════════════════════════════ */
+.mq-wrap{
+  position:relative;z-index:2;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:.9rem 0;background:var(--ink2);overflow:hidden;
+}
+.mq-track{
+  display:flex;width:max-content;
+  animation:mq 30s linear infinite;
+}
+.mq-item{
+  display:flex;align-items:center;gap:2rem;
+  padding:0 2.5rem;white-space:nowrap;
+}
+.mq-txt{
+  font-family:var(--serif);font-size:.95rem;
+  font-style:italic;font-weight:300;color:var(--ash);
+}
+.mq-dot{width:4px;height:4px;border-radius:50%;background:var(--goldD);flex-shrink:0}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ═══════════════════════════════════════
+   SECTIONS
+═══════════════════════════════════════ */
+section{position:relative;z-index:2}
+.si{max-width:1100px;margin:0 auto;padding:8rem 3rem}
+
+.slabel{
+  display:flex;align-items:center;gap:1rem;margin-bottom:3rem;
+  opacity:0;transform:translateY(20px);
+}
+.sl-line{width:0;height:1px;background:var(--goldD)}
+.sl-txt{
+  font-family:var(--mono);font-size:.6rem;font-weight:300;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--goldD);
+}
+.sl-n{margin-left:auto;font-family:var(--mono);font-size:.56rem;color:var(--fog);letter-spacing:.1em}
+
+.sh{
+  font-family:var(--serif);font-weight:300;
+  font-size:clamp(2.2rem,4.5vw,4rem);
+  line-height:1.08;letter-spacing:-.01em;color:var(--paper);
+  margin-bottom:1.2rem;
+}
+.sh em{font-style:italic;color:var(--gold)}
+.sh strong{font-weight:600}
+.sh .word{display:inline-block;overflow:hidden;vertical-align:bottom}
+.sh .wi{display:inline-block;transform:translateY(100%)}
+
+.sp{
+  font-size:.92rem;font-weight:300;color:var(--ash);
+  line-height:1.85;max-width:460px;margin-bottom:4rem;
+  opacity:0;transform:translateY(20px);
+}
+
+/* ═══════════════════════════════════════
+   BEFORE / AFTER
+═══════════════════════════════════════ */
+#problem{background:var(--ink2)}
+
+.ba{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:2px;border:1px solid var(--line);
+  opacity:0;transform:translateY(30px);
+}
+.ba-c{padding:2.5rem;background:var(--ink3)}
+.ba-c.af{background:rgba(196,164,94,.03)}
+.ba-hd{
+  display:flex;align-items:center;gap:.8rem;
+  margin-bottom:1.5rem;padding-bottom:1.2rem;
+  border-bottom:1px solid var(--fog);
+}
+.ba-badge{
+  font-family:var(--mono);font-size:.58rem;font-weight:300;
+  letter-spacing:.18em;text-transform:uppercase;
+  padding:.22rem .65rem;border-radius:2px;
+}
+.badge-b{background:rgba(139,58,42,.12);border:1px solid rgba(139,58,42,.28);color:var(--rustL)}
+.badge-a{background:rgba(196,164,94,.08);border:1px solid rgba(196,164,94,.25);color:var(--goldL)}
+.ba-ttl{font-family:var(--serif);font-size:1rem;font-weight:400;color:var(--paper2)}
+.ba-list{list-style:none;display:flex;flex-direction:column;gap:.8rem}
+.ba-li{
+  display:flex;align-items:flex-start;gap:.8rem;
+  font-size:.83rem;font-weight:300;
+  color:rgba(240,235,225,.5);line-height:1.6;
+}
+.bi{flex-shrink:0;font-size:.7rem;margin-top:2px}
+.bi.x{color:var(--rustL)}.bi.c{color:var(--goldL)}
+
+/* ═══════════════════════════════════════
+   PROOF BAR
+═══════════════════════════════════════ */
+#proof{
+  background:var(--gold);padding:3rem;
+  position:relative;z-index:2;overflow:hidden;
+}
+#proof::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.07'/%3E%3C/svg%3E");
+  background-size:200px;mix-blend-mode:multiply;
+}
+.proof-i{
+  max-width:1100px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  position:relative;z-index:1;
+}
+.proof-c{
+  padding:0 2rem;text-align:center;
+  border-right:1px solid rgba(12,11,9,.15);
+}
+.proof-c:last-child{border-right:none}
+.proof-n{
+  font-family:var(--serif);font-size:3rem;
+  font-weight:300;font-style:italic;color:var(--ink);
+  display:block;margin-bottom:.3rem;line-height:1;
+}
+.proof-l{
+  font-size:.65rem;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(12,11,9,.55);
+}
+
+/* ═══════════════════════════════════════
+   SERVICES — HORIZONTAL SCROLL TRACK
+═══════════════════════════════════════ */
+#services{background:var(--ink);overflow:hidden}
+
+.svc-header{
+  max-width:1100px;margin:0 auto;
+  padding:8rem 3rem 2rem;
+}
+
+.svc-track-wrap{padding:0 3rem 5rem;overflow:hidden}
+.svc-track{
+  display:flex;gap:1.5rem;
+  overflow-x:auto;scroll-snap-type:x mandatory;
+  scrollbar-width:none;-ms-overflow-style:none;
+  cursor:grab;padding-bottom:1rem;
+}
+.svc-track::-webkit-scrollbar{display:none}
+.svc-track.g{cursor:grabbing}
+
+.svc-card{
+  flex:0 0 360px;scroll-snap-align:start;
+  background:var(--ink3);border:1px solid var(--line);
+  padding:2.5rem;position:relative;overflow:hidden;
+  transition:border-color .3s,box-shadow .3s;
+  opacity:0;transform:translateY(40px);
+}
+.svc-card::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  transform:scaleX(0) ;transition:transform .45s;
+}
+.svc-card:hover{border-color:var(--lineL);box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 40px rgba(196,164,94,.07)}
+.svc-card:hover::before{transform:scaleX(1)}
+
+.c-num{
+  font-family:var(--serif);font-size:4.5rem;
+  font-weight:300;font-style:italic;color:var(--fog);
+  line-height:1;margin-bottom:1.5rem;transition:color .35s;
+}
+.svc-card:hover .c-num{color:var(--goldD)}
+.c-tag{
+  display:inline-block;margin-bottom:1.2rem;
+  font-family:var(--mono);font-size:.56rem;font-weight:300;
+  letter-spacing:.18em;text-transform:uppercase;
+  padding:.2rem .65rem;border-radius:2px;
+}
+.ct1{background:rgba(196,164,94,.1);border:1px solid rgba(196,164,94,.25);color:var(--goldL)}
+.ct2{background:rgba(139,58,42,.1);border:1px solid rgba(139,58,42,.25);color:var(--rustL)}
+.ct3{background:rgba(74,68,56,.25);border:1px solid rgba(74,68,56,.4);color:var(--ash)}
+
+.c-ttl{
+  font-family:var(--serif);font-size:1.55rem;font-weight:400;
+  color:var(--paper);line-height:1.2;margin-bottom:.8rem;
+}
+.c-desc{font-size:.82rem;font-weight:300;color:var(--ash);line-height:1.75;margin-bottom:1.8rem}
+.c-feats{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+.c-feat{
+  display:flex;align-items:flex-start;gap:.6rem;
+  font-size:.76rem;font-weight:300;
+  color:rgba(240,235,225,.42);line-height:1.5;
+}
+.fa{color:var(--goldD);flex-shrink:0;font-size:.68rem;margin-top:1px}
+
+.scroll-hint-row{
+  display:flex;align-items:center;gap:1rem;
+  padding:0 3rem;
+  font-family:var(--mono);font-size:.58rem;font-weight:300;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--fog);
+  opacity:0;
+}
+.sh-line{flex:1;height:1px;background:var(--fog);max-width:60px}
+
+/* ═══════════════════════════════════════
+   PROCESS — SCROLL-PINNED STEPS
+═══════════════════════════════════════ */
+#process{background:var(--ink2)}
+
+.proc-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+}
+.proc-step{
+  padding:3rem;border-bottom:1px solid var(--fog);
+  border-right:1px solid var(--fog);
+  position:relative;overflow:hidden;
+  transition:background .4s;
+  opacity:0;transform:translateY(30px);
+}
+.proc-step:nth-child(even){border-right:none}
+.proc-step:nth-child(3),.proc-step:nth-child(4){border-bottom:none}
+.proc-step::after{
+  content:'';position:absolute;
+  top:0;left:0;width:0;height:100%;
+  background:rgba(196,164,94,.025);
+  transition:width .5s cubic-bezier(.16,1,.3,1);
+}
+.proc-step:hover::after{width:100%}
+
+.ps-n{
+  font-family:var(--serif);font-size:5rem;
+  font-weight:300;font-style:italic;color:var(--fog);
+  line-height:1;margin-bottom:1.5rem;transition:color .35s;
+}
+.proc-step:hover .ps-n{color:rgba(196,164,94,.18)}
+.ps-ttl{font-family:var(--serif);font-size:1.25rem;font-weight:400;color:var(--paper);margin-bottom:.6rem}
+.ps-desc{font-size:.8rem;font-weight:300;color:var(--ash);line-height:1.75}
+.ps-dur{
+  position:absolute;bottom:1.5rem;right:1.5rem;
+  font-family:var(--mono);font-size:.54rem;
+  color:var(--fog);letter-spacing:.1em;transition:color .3s;
+}
+.proc-step:hover .ps-dur{color:var(--goldD)}
+
+/* ═══════════════════════════════════════
+   ABOUT
+═══════════════════════════════════════ */
+#about{background:var(--ink)}
+
+.about-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:6rem;align-items:start;
+}
+
+.ab-left{position:sticky;top:8rem;opacity:0;transform:translateX(-30px)}
+
+.f-card{
+  border:1px solid var(--line);background:var(--ink3);
+  overflow:hidden;margin-bottom:1.5rem;
+}
+.f-hd{
+  display:flex;align-items:center;gap:1.2rem;
+  padding:2rem;border-bottom:1px solid var(--fog);
+}
+.f-av{
+  width:54px;height:54px;flex-shrink:0;
+  border:1px solid var(--goldD);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:1.4rem;
+  font-weight:300;font-style:italic;color:var(--gold);
+}
+.f-name{font-family:var(--serif);font-size:1rem;font-weight:400;color:var(--paper)}
+.f-role{font-size:.73rem;color:var(--ash);font-weight:300;margin-top:.1rem}
+.f-avail{
+  margin-left:auto;font-family:var(--mono);
+  font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:.2rem .6rem;
+  background:rgba(196,164,94,.07);border:1px solid rgba(196,164,94,.2);
+  color:var(--goldL);
+}
+.f-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--fog)}
+.f-st{padding:1.2rem .8rem;text-align:center;border-right:1px solid var(--fog)}
+.f-st:last-child{border-right:none}
+.f-st-n{font-family:var(--serif);font-size:1.35rem;font-weight:300;font-style:italic;color:var(--gold);display:block}
+.f-st-l{font-size:.52rem;font-weight:300;letter-spacing:.08em;color:var(--ash);display:block;margin-top:1px}
+.f-stack{padding:1.2rem 2rem;display:flex;flex-wrap:wrap;gap:.4rem}
+.s-pill{
+  font-family:var(--mono);font-size:.58rem;font-weight:300;letter-spacing:.05em;
+  padding:.18rem .6rem;border-radius:2px;
+  background:rgba(74,68,56,.18);border:1px solid var(--fog);color:var(--ash);
+}
+
+.ab-right{opacity:0;transform:translateX(30px)}
+.ab-h{
+  font-family:var(--serif);font-size:clamp(2rem,3.5vw,3rem);
+  font-weight:300;line-height:1.12;color:var(--paper);
+  margin-bottom:1.2rem;letter-spacing:-.01em;
+}
+.ab-h em{font-style:italic;color:var(--gold)}
+.ab-p{font-size:.88rem;font-weight:300;color:var(--ash);line-height:1.85;margin-bottom:2rem}
+.ab-pts{list-style:none;display:flex;flex-direction:column;gap:0;margin-bottom:2.5rem}
+.ab-pt{
+  display:flex;align-items:flex-start;gap:1rem;
+  padding:1rem 0;border-bottom:1px solid var(--fog);
+  font-size:.83rem;font-weight:300;
+  color:rgba(240,235,225,.5);line-height:1.65;
+  transition:color .25s;
+}
+.ab-pt:hover{color:rgba(240,235,225,.82)}
+.ap-n{font-family:var(--mono);font-size:.6rem;color:var(--goldD);flex-shrink:0;margin-top:2px}
+
+/* ═══════════════════════════════════════
+   CONTACT
+═══════════════════════════════════════ */
+#contact{background:var(--ink2)}
+
+.ct-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:4rem;align-items:start;
+}
+.ct-left{opacity:0;transform:translateY(30px)}
+.ct-h{
+  font-family:var(--serif);font-size:clamp(2.5rem,4vw,3.8rem);
+  font-weight:300;line-height:1.05;color:var(--paper);margin-bottom:1rem;
+}
+.ct-h em{font-style:italic;color:var(--gold)}
+.ct-p{font-size:.88rem;font-weight:300;color:var(--ash);line-height:1.85;margin-bottom:2.5rem}
+.ct-info{display:flex;flex-direction:column;gap:.5rem}
+.ct-lnk{
+  display:flex;align-items:center;gap:1rem;
+  font-size:.82rem;color:var(--ash);
+  text-decoration:none;padding:.85rem 0;
+  border-bottom:1px solid var(--fog);
+  transition:color .2s;
+}
+.ct-lnk:hover{color:var(--gold)}
+.ct-icon{color:var(--goldD);flex-shrink:0;font-size:.75rem}
+.ct-arr{margin-left:auto;color:var(--fog);font-size:.75rem;transition:color .2s,transform .2s}
+.ct-lnk:hover .ct-arr{color:var(--gold);transform:translateX(4px)}
+
+.ct-right{opacity:0;transform:translateY(30px)}
+.ct-form{background:var(--ink3);border:1px solid var(--line);padding:2.5rem}
+.f-grp{margin-bottom:1.2rem}
+.f-lbl{
+  display:block;font-family:var(--mono);
+  font-size:.56rem;font-weight:300;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ash);margin-bottom:.5rem;
+}
+.f-inp,.f-sel,.f-ta{
+  width:100%;background:rgba(0,0,0,.3);
+  border:1px solid var(--fog);border-radius:0;
+  padding:.8rem 1rem;color:var(--paper);
+  font-family:var(--sans);font-size:.83rem;font-weight:300;
+  outline:none;transition:border-color .2s;
+  appearance:none;-webkit-appearance:none;
+}
+.f-inp::placeholder,.f-ta::placeholder{color:var(--fog)}
+.f-inp:focus,.f-sel:focus,.f-ta:focus{border-color:var(--goldD)}
+.f-sel{background:rgba(0,0,0,.5);cursor:pointer}
+.f-sel option{background:var(--ink3)}
+.f-ta{resize:vertical;min-height:96px}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.f-sub{
+  width:100%;padding:1rem;margin-top:.5rem;
+  background:var(--gold);color:var(--ink);
+  border:none;font-family:var(--sans);
+  font-size:.72rem;font-weight:500;
+  letter-spacing:.2em;text-transform:uppercase;
+  cursor:pointer;transition:all .25s;
+  clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);
+}
+.f-sub:hover{background:var(--goldL);transform:translateY(-2px);box-shadow:0 8px 28px rgba(196,164,94,.25)}
+
+/* ── Typeform embed ── */
+.tf-wrap{border:1px solid var(--line);overflow:hidden;background:var(--ink3)}
+.tf-header{padding:1.8rem 2rem 1.4rem;border-bottom:1px solid var(--fog)}
+.tf-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.tf-badge{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-family:var(--mono);font-size:.58rem;font-weight:300;
+  letter-spacing:.15em;text-transform:uppercase;
+  padding:.25rem .7rem;border-radius:2px;
+  background:rgba(196,164,94,.08);border:1px solid rgba(196,164,94,.22);color:var(--goldL);
+}
+.tf-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:pls 2.5s ease infinite}
+@keyframes pls{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.25;transform:scale(1.8)}}
+.tf-est{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;color:var(--ash)}
+.tf-header-title{font-family:var(--serif);font-size:1.3rem;font-weight:400;color:var(--paper);margin-bottom:.3rem;line-height:1.2}
+.tf-header-sub{font-size:.8rem;font-weight:300;color:var(--ash);line-height:1.6}
+.tf-embed-outer{position:relative;background:var(--ink)}
+.tf-embed-inner{position:relative;height:680px}
+#tf-iframe{width:100%;height:100%;display:block;border:none}
+.tf-loading{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1rem;background:var(--ink);
+}
+.tf-loading-spinner{
+  width:28px;height:28px;
+  border:1px solid var(--fog);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tf-loading-txt{font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ash)}
+.tf-footer{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.9rem 2rem;border-top:1px solid var(--fog);background:rgba(0,0,0,.2);
+}
+.tf-footer-icon{font-size:.8rem}
+.tf-footer-txt{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;color:var(--fog)}
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer{
+  position:relative;z-index:2;
+  background:var(--ink);
+  border-top:1px solid var(--fog);
+  padding:2.5rem 3rem;
+  display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;gap:2rem;
+}
+.ft-logo{font-family:var(--serif);font-size:1rem;font-weight:400;font-style:italic;color:var(--paper2)}
+.ft-logo b{font-style:normal;font-weight:300;color:var(--goldD)}
+.ft-copy{font-family:var(--mono);font-size:.56rem;font-weight:300;letter-spacing:.1em;color:var(--fog);text-align:center}
+.ft-links{display:flex;justify-content:flex-end;gap:2rem}
+.ft-links a{font-family:var(--mono);font-size:.58rem;font-weight:300;letter-spacing:.12em;text-transform:uppercase;color:var(--fog);text-decoration:none;transition:color .2s}
+.ft-links a:hover{color:var(--gold)}
+
+/* ═══════════════════════════════════════
+   HORIZONTAL SCROLL LINE (progress)
+═══════════════════════════════════════ */
+#progress-line{
+  position:fixed;top:0;left:0;height:1px;
+  background:linear-gradient(90deg,var(--goldD),var(--gold));
+  width:0%;z-index:200;transition:width .1s;
+}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media(max-width:900px){
+  nav{padding:1.2rem 1.5rem}
+  nav.stuck{padding:.9rem 1.5rem}
+  .n-links{display:none}
+  .hero-body{padding:8rem 1.5rem 3rem}
+  .hero-term{display:none}
+  .h-ticker{padding:1rem 1.5rem;gap:1.5rem}
+  .si{padding:5rem 1.5rem}
+  .svc-header{padding:5rem 1.5rem 2rem}
+  .svc-track-wrap{padding:0 1.5rem 3rem}
+  .ba{grid-template-columns:1fr}
+  .about-grid,.ct-grid{grid-template-columns:1fr;gap:3rem}
+  .ab-left{position:static}
+  .proc-grid{grid-template-columns:1fr}
+  .proc-step{border-right:none!important}
+  .proc-step:nth-child(3){border-bottom:1px solid var(--fog)!important}
+  .proof-i{grid-template-columns:1fr 1fr;gap:1.5rem}
+  .proof-c{border-right:none;padding:1rem 0}
+  footer{grid-template-columns:1fr;text-align:center;padding:2rem 1.5rem}
+  .ft-links{justify-content:center}
+}
+
+/* ═══════════════════════════════════════
+   FLOATING FORM BUTTON + MODAL
+═══════════════════════════════════════ */
+
+/* Floating Button */
+#form-fab {
+  position: fixed;
+  bottom: 2.2rem;
+  right: 2.2rem;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .85rem 1.6rem;
+  background: var(--gold);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  box-shadow: 0 8px 40px rgba(196,164,94,.35), 0 0 0 1px rgba(196,164,94,.15);
+  transition: background .25s, transform .2s, box-shadow .25s;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fab-in .6s cubic-bezier(.16,1,.3,1) 2.5s forwards;
+}
+@keyframes fab-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+#form-fab:hover {
+  background: var(--goldL);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 50px rgba(196,164,94,.45);
+}
+#form-fab .fab-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ink);
+  animation: fab-pulse 2s ease infinite;
+  flex-shrink: 0;
+}
+@keyframes fab-pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .4; transform: scale(1.6); }
+}
+#form-fab.open {
+  background: var(--ink3);
+  color: var(--ash);
+  box-shadow: none;
+  border: 1px solid var(--fog);
+  clip-path: none;
+  border-radius: 2px;
+}
+#form-fab.open .fab-dot { display: none; }
+
+/* Modal Overlay */
+#form-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 4999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(12,11,9,.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s cubic-bezier(.16,1,.3,1);
+}
+#form-modal.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Modal Panel */
+#form-panel {
+  width: 100%;
+  max-width: 680px;
+  background: var(--ink2);
+  border: 1px solid var(--lineL);
+  box-shadow: 0 40px 100px rgba(0,0,0,.8), 0 0 60px rgba(196,164,94,.06);
+  transform: translateY(30px) scale(.97);
+  transition: transform .4s cubic-bezier(.16,1,.3,1);
+  overflow: hidden;
+}
+#form-modal.visible #form-panel {
+  transform: translateY(0) scale(1);
+}
+
+/* Modal Header */
+.fmod-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 1.8rem;
+  border-bottom: 1px solid var(--fog);
+  background: rgba(0,0,0,.25);
+}
+.fmod-badge {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-family: var(--mono);
+  font-size: .58rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--goldL);
+}
+.fmod-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: fab-pulse 2.5s ease infinite;
+}
+.fmod-title {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--paper);
+  margin-top: .25rem;
+}
+.fmod-sub {
+  font-size: .74rem;
+  font-weight: 300;
+  color: var(--ash);
+  margin-top: .18rem;
+  line-height: 1.5;
+}
+.fmod-close {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--fog);
+  background: transparent;
+  color: var(--ash);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.fmod-close:hover { border-color: var(--gold); color: var(--gold); }
+
+/* Modal Body — Tally iframe */
+.fmod-body {
+  padding: 0;
+  background: var(--ink);
+}
+.fmod-body iframe {
+  display: block;
+  width: 100%;
+  height: 580px;
+  border: none;
+}
+
+/* Modal Footer */
+.fmod-footer {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .8rem 1.8rem;
+  border-top: 1px solid var(--fog);
+  background: rgba(0,0,0,.2);
+}
+.fmod-footer-txt {
+  font-family: var(--mono);
+  font-size: .54rem;
+  letter-spacing: .1em;
+  color: var(--fog);
+}
+
+@media(max-width:900px){
+  #form-fab { bottom: 1.4rem; right: 1.4rem; padding: .75rem 1.2rem; }
+  #form-panel { max-width: 100%; }
+  .fmod-body iframe { height: 520px; }
+}
+
+
+/* Retainer Grid */
+.ret-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:3rem}
+.ret-card{padding:2.5rem 2rem;border-right:1px solid var(--fog);border-top:1px solid var(--fog)}
+.ret-card:last-child{border-right:none}
+.ret-n{font-family:var(--serif);font-size:.75rem;letter-spacing:.15em;color:var(--goldD);margin-bottom:1rem}
+.ret-ttl{font-family:var(--serif);font-size:1.15rem;font-weight:400;color:var(--paper);margin-bottom:.75rem}
+.ret-desc{font-size:.8rem;font-weight:300;color:var(--ash);line-height:1.75}
+@media(max-width:900px){
+  .ret-grid{grid-template-columns:1fr}
+  .ret-card{border-right:none!important;padding:2rem 0}
+}
+
+.li-note{
+  display:flex;align-items:center;gap:.65rem;
+  margin-top:1.25rem;padding:.85rem 1.1rem;
+  border:1px solid var(--fog);background:rgba(196,164,94,.04);
+}
+.li-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--gold);
+  flex-shrink:0;animation:li-pulse 2s ease infinite;
+}
+@keyframes li-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.5)}}
+.li-txt{font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;color:var(--ash);line-height:1.6}
+.li-txt b{color:var(--goldL);font-weight:500}
+</style>
+</head>
+<body>
+
+<!-- Progress line -->
+<div id="progress-line"></div>
+
+<!-- Loader -->
+<div id="loader">
+  <div class="loader-logo">LeadForge<span>AI</span></div>
+  <div class="loader-bar-wrap"><div class="loader-bar" id="lbar"></div></div>
+  <div class="loader-pct" id="lpct">0%</div>
+</div>
+
+<!-- Cursor -->
+<div id="cur"></div>
+<div id="cur-r"></div>
+
+<!-- Three.js bg -->
+<canvas id="bg"></canvas>
+<div id="grain"></div>
+<div id="vig"></div>
+
+<!-- ══════ NAV ══════ -->
+<nav id="nav">
+  <div class="n-logo">LeadForge<b>AI</b></div>
+  <ul class="n-links">
+    <li><a href="#hero">Home</a></li>
+    <li><a href="#problem">Problem</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#about">About</a></li>
+  </ul>
+  <a href="#contact" class="n-cta">Book a Call</a>
+</nav>
+
+<!-- ══════ HERO ══════ -->
+<section id="hero">
+  <div class="hero-body">
+    <div class="h-eye">
+      <div class="h-eye-line"></div>
+      <span class="h-eye-txt">C&amp;I Solar Revenue Infrastructure &nbsp;·&nbsp; US &amp; UK Market &nbsp;·&nbsp; Managed Retainer</span>
+    </div>
+
+    <h1 class="hero-h" id="hero-h">
+      <span class="line"><span class="line-inner"><strong>Your Next C&amp;I Deal</strong></span></span>
+      <span class="line"><span class="line-inner">Is Already Searching.</span></span>
+      <span class="line"><span class="line-inner"><em>Are You First?</em></span></span>
+    </h1>
+
+    <p class="hero-p">
+      LeadForge AI runs the revenue infrastructure behind commercial and industrial solar installers in the US and UK — a Deterministic ROI Engine that fires a personalised 25-year savings report to any inbound C&amp;I prospect in under 2 minutes, and a Dual-AI Outreach System that researches warehouse owners, facility managers, and commercial developers before writing a single word. Hosted, monitored, and optimised monthly — not shipped once and forgotten.
+    </p>
+
+    <div class="hero-btns">
+      <a href="#contact" class="btn-g">Book a Free Call <span>→</span></a>
+      <a href="#services" class="btn-o">View Systems</a>
+    </div>
+  </div>
+
+  <!-- Terminal -->
+  <div class="hero-term" id="hero-term">
+    <div class="term" id="term-card">
+      <div class="term-bar">
+        <div class="td" style="background:#ff5f57"></div>
+        <div class="td" style="background:#febc2e"></div>
+        <div class="td" style="background:#28c840"></div>
+        <span class="term-ttl">leadforge-ai / n8n-runtime</span>
+      </div>
+      <div class="term-body">
+        <div class="tl"><span class="tp">$</span><span class="tc">workflow run solar-roi-engine</span></div>
+        <div class="tl"><span class="tcm">// Typeform webhook — prospect data received</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> Schema validation &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[11ms]</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> Dedup check passed &nbsp;&nbsp;&nbsp;&nbsp;[23ms]</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> ROI engine computed &nbsp;&nbsp;&nbsp;[38ms]</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> Gemini 2.5 Flash &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[4.1s]</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> 38-field JSON validated [8ms]</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> Slides rendered &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.7s]</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> PDF exported &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[0.9s]</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> Report delivered &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[0.4s]</span></div>
+        <div class="tl"><span class="twn">↑</span><span class="tc"> Intent score: <span class="twn">84/100</span> — PRIORITY</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> HubSpot pipeline updated</span></div>
+        <div class="tl"><span class="tok">✓</span><span class="tc"> Sales alert dispatched</span></div>
+        <div class="tl">&nbsp;</div>
+        <div class="tl"><span class="tdm">Speed-to-lead: </span><span class="twn">&lt;2min</span><span class="tdm"> · Zero operator input.</span></div>
+        <div class="tl"><span class="tp">$</span><span class="tcur"></span></div>
+      </div>
+    </div>
+    <div class="sf sf1"><div class="sf-n">2min</div><div class="sf-l">Avg. delivery</div></div>
+    <div class="sf sf2"><div class="sf-n">84</div><div class="sf-l">Lead score · HOT</div></div>
+  </div>
+
+  <!-- Ticker -->
+  <div class="h-ticker" id="h-ticker">
+    <div class="tk"><span class="tk-n">&lt;2min</span><span class="tk-l">Speed-to-lead</span></div>
+    <div class="tk-div"></div>
+    <div class="tk"><span class="tk-n">8/10+</span><span class="tk-l">Quality floor</span></div>
+    <div class="tk-div"></div>
+    <div class="tk"><span class="tk-n">24/7</span><span class="tk-l">Autonomous operation</span></div>
+    <div class="tk-div"></div>
+    <div class="tk"><span class="tk-n">38</span><span class="tk-l">AI fields per lead</span></div>
+    <div class="tk-div"></div>
+    <div class="tk"><span class="tk-n">0</span><span class="tk-l">Operator input required</span></div>
+  </div>
+</section>
+
+<!-- ══════ MARQUEE ══════ -->
+<div class="mq-wrap">
+  <div class="mq-track">
+    <div class="mq-item"><span class="mq-txt">C&amp;I Solar &middot; US &amp; UK Markets</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Deterministic ROI Engine</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Multi-Engine Fail-Safe Scraping</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Dual-AI Quality Assurance</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Sub-2-Minute Speed-to-Lead</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Warehouse &amp; Facility Manager Outreach</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Zero Hallucination Architecture</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">25-Year C&amp;I Savings Reports</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Managed Monthly Retainer</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">C&amp;I Solar &middot; US &amp; UK Markets</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Deterministic ROI Engine</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Multi-Engine Fail-Safe Scraping</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Dual-AI Quality Assurance</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Sub-2-Minute Speed-to-Lead</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Warehouse &amp; Facility Manager Outreach</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Zero Hallucination Architecture</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">25-Year C&amp;I Savings Reports</span><span class="mq-dot"></span></div>
+    <div class="mq-item"><span class="mq-txt">Managed Monthly Retainer</span><span class="mq-dot"></span></div>
+  </div>
+</div>
+
+<!-- ══════ PROBLEM ══════ -->
+<section id="problem">
+  <div class="si">
+    <div class="slabel" id="sl-1">
+      <div class="sl-line"></div>
+      <span class="sl-txt">The Problem</span>
+      <span class="sl-n">01 / 04</span>
+    </div>
+    <h2 class="sh" id="sh-1">
+      <span class="word"><span class="wi">Your&nbsp;</span></span>
+      <span class="word"><span class="wi">revenue&nbsp;</span></span>
+      <span class="word"><span class="wi">leaks&nbsp;</span></span><br>
+      <span class="word"><span class="wi"><em>between&nbsp;</em></span></span>
+      <span class="word"><span class="wi"><em>interest&nbsp;</em></span></span>
+      <span class="word"><span class="wi"><em>and&nbsp;</em></span></span>
+      <span class="word"><span class="wi"><em>contact.</em></span></span>
+    </h2>
+    <p class="sp" id="sp-1">A warehouse owner Googles commercial solar on a Tuesday afternoon. By Wednesday, three competitors have already emailed them. Most C&amp;I installers respond in hours. LeadForge AI puts a personalised 25-year ROI report in that prospect's inbox within 2 minutes — before your competitor wakes up.</p>
+
+    <div class="ba" id="ba-1">
+      <div class="ba-c">
+        <div class="ba-hd">
+          <div class="ba-badge badge-b">Status Quo</div>
+          <div class="ba-ttl">Without LeadForge AI</div>
+        </div>
+        <ul class="ba-list">
+          <li class="ba-li"><span class="bi x">✕</span>Generic form submission — prospect receives zero immediate value</li>
+          <li class="ba-li"><span class="bi x">✕</span>Manual follow-up hours later — intent has already decayed</li>
+          <li class="ba-li"><span class="bi x">✕</span>Competitors with faster systems close the deal first</li>
+          <li class="ba-li"><span class="bi x">✕</span>Sales team burns time educating unqualified, low-intent leads</li>
+          <li class="ba-li"><span class="bi x">✕</span>No intent scoring — every lead looks the same in the CRM</li>
+          <li class="ba-li"><span class="bi x">✕</span>High-value commercial leads lost in the same queue as cold traffic</li>
+        </ul>
+      </div>
+      <div class="ba-c af">
+        <div class="ba-hd">
+          <div class="ba-badge badge-a">LeadForge AI</div>
+          <div class="ba-ttl">With LeadForge AI</div>
+        </div>
+        <ul class="ba-list">
+          <li class="ba-li"><span class="bi c">→</span>Prospect submits form — personalised 25-year ROI report delivered in &lt;2min</li>
+          <li class="ba-li"><span class="bi c">→</span>Report calculates exact system size, bill savings, and payback period</li>
+          <li class="ba-li"><span class="bi c">→</span>Prospect arrives on the call pre-educated — your team skips the basics</li>
+          <li class="ba-li"><span class="bi c">→</span>Every lead assigned a deterministic intent score across 7 weighted signals</li>
+          <li class="ba-li"><span class="bi c">→</span>Priority leads trigger real-time Slack dispatch — your team calls first</li>
+          <li class="ba-li"><span class="bi c">→</span>Full pipeline sync to HubSpot. Zero manual data entry. Ever.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ PROOF ══════ -->
+<div id="proof">
+  <div class="proof-i">
+    <div class="proof-c"><span class="proof-n ctr" data-t="2" data-s=" min">&lt;2 min</span><span class="proof-l">Speed-to-lead architecture</span></div>
+    <div class="proof-c"><span class="proof-n ctr" data-t="38" data-s=" fields">0 fields</span><span class="proof-l">C&amp;I data points per report</span></div>
+    <div class="proof-c"><span class="proof-n ctr" data-t="8" data-s="/10+">0/10+</span><span class="proof-l">Quality floor enforced</span></div>
+    <div class="proof-c"><span class="proof-n ctr" data-t="25" data-s=" yr">0 yr</span><span class="proof-l">Year savings table + NPV/IRR</span></div>
+  </div>
+</div>
+
+<!-- ══════ SERVICES ══════ -->
+<section id="services">
+  <div class="svc-header">
+    <div class="slabel" id="sl-2">
+      <div class="sl-line"></div>
+      <span class="sl-txt">Our Systems</span>
+      <span class="sl-n">02 / 04</span>
+    </div>
+    <h2 class="sh" id="sh-2">
+      <span class="word"><span class="wi">Two&nbsp;</span></span>
+      <span class="word"><span class="wi">engines.&nbsp;</span></span>
+      <span class="word"><span class="wi"><em>Zero&nbsp;</em></span></span>
+      <span class="word"><span class="wi"><em>compromise.</em></span></span>
+    </h2>
+    <p class="sp" id="sp-2">Not templates. Not prompt wrappers. Two deterministic, production-grade systems built exclusively for C&amp;I solar — retained monthly, not delivered once and forgotten.</p>
+  </div>
+
+  <div class="svc-track-wrap">
+    <div class="svc-track" id="svc-track">
+      <div class="svc-card" id="sc1">
+        <div class="c-num">01</div>
+        <div class="c-tag ct1">Inbound Revenue</div>
+        <div class="c-ttl">Deterministic ROI Engine</div>
+        <p class="c-desc">A facility manager or property owner submits 6 data points. Our custom JavaScript engine computes their precise 25-year C&amp;I solar ROI — system size, utility bill reduction, IRA incentive stack, payback period — then Gemini 2.5 Flash renders a branded PDF in under 2 minutes. Hosted on infrastructure we monitor daily, not code we ship and forget.</p>
+        <ul class="c-feats">
+          <li class="c-feat"><span class="fa">→</span>24/7 VPS hosting — your engine never goes down on our watch</li>
+          <li class="c-feat"><span class="fa">→</span>Automated error resolution — API failures fixed before you notice</li>
+          <li class="c-feat"><span class="fa">→</span>Continuous prompt optimization — output quality never degrades</li>
+          <li class="c-feat"><span class="fa">→</span>Monthly ROI reporting — exact lead volume, cost-per-lead, close rate</li>
+          <li class="c-feat"><span class="fa">→</span>7-signal weighted intent scoring — commercial leads prioritised</li>
+          <li class="c-feat"><span class="fa">→</span>Real-time HubSpot pipeline sync + priority Slack dispatch</li>
+        </ul>
+      </div>
+      <div class="svc-card" id="sc2">
+        <div class="c-num">02</div>
+        <div class="c-tag ct2">Outbound Intelligence</div>
+        <div class="c-ttl">Dual-AI Outreach System</div>
+        <p class="c-desc">Feed it a list of warehouses, manufacturers, or commercial developers. Our Multi-Engine Fail-Safe Scraper extracts page content, then identity-signal extraction identifies what actually makes each C&amp;I prospect worth contacting. A second Gemini instance QA-scores every opener against evidence, not adjectives. We retune the scoring bar every month as reply data comes in.</p>
+        <ul class="c-feats">
+          <li class="c-feat"><span class="fa">→</span>24/7 VPS hosting — outreach keeps firing while you sleep</li>
+          <li class="c-feat"><span class="fa">→</span>Automated error resolution — scraper or API breaks, we patch it same day</li>
+          <li class="c-feat"><span class="fa">→</span>Continuous prompt optimization — reply-rate data retunes the writer monthly</li>
+          <li class="c-feat"><span class="fa">→</span>Monthly ROI reporting — sent, opened, replied, booked — by campaign</li>
+          <li class="c-feat"><span class="fa">→</span>QuickEmailVerify deliverability validation — bounces never reach GMass</li>
+          <li class="c-feat"><span class="fa">→</span>GMass sequence dispatch — throttled, human-paced, reply-aware</li>
+        </ul>
+      </div>
+      <div class="svc-card" id="sc3">
+        <div class="c-num">03</div>
+        <div class="c-tag ct3">Managed Infrastructure</div>
+        <div class="c-ttl">Fully Managed AI Infrastructure</div>
+        <p class="c-desc">Every system we ship is retained, not delivered. We host it, watch it, and tune it every month for the life of the contract — the same enterprise-grade error handling and quality enforcement standards, running under a support SLA instead of a 30-day grace period.</p>
+        <ul class="c-feats">
+          <li class="c-feat"><span class="fa">→</span>24/7 VPS hosting — dedicated infrastructure, not shared localhost</li>
+          <li class="c-feat"><span class="fa">→</span>Automated error resolution — break/fix SLA measured in hours, not days</li>
+          <li class="c-feat"><span class="fa">→</span>Continuous prompt optimization — output never quietly degrades</li>
+          <li class="c-feat"><span class="fa">→</span>Monthly ROI reporting — a number you can show your board, not a dashboard link</li>
+          <li class="c-feat"><span class="fa">→</span>Automated failure logging + Slack incident alerts on every node</li>
+          <li class="c-feat"><span class="fa">→</span>Direct access to the architect on retainer — not a support ticket queue</li>
+        </ul>
+      </div>
+    </div>
+    <div class="scroll-hint-row" id="scroll-hint">
+      <span>Drag to explore</span>
+      <div class="sh-line"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ PROCESS ══════ -->
+<section id="process">
+  <div class="si">
+    <div class="slabel" id="sl-3">
+      <div class="sl-line"></div>
+      <span class="sl-txt">How It Works</span>
+      <span class="sl-n">03 / 04</span>
+    </div>
+    <h2 class="sh" id="sh-3">
+      <span class="word"><span class="wi">Scoped,&nbsp;</span></span>
+      <span class="word"><span class="wi">built,&nbsp;</span></span>
+      <span class="word"><span class="wi"><em>deployed&nbsp;</em></span></span>
+      <span class="word"><span class="wi"><em>in&nbsp;</em></span></span>
+      <span class="word"><span class="wi"><em>days.</em></span></span>
+    </h2>
+    <p class="sp" id="sp-3">No discovery theatre. No 6-week sprints. We move from requirements to live infrastructure in under a week — with failure handling and monitoring operational from day one.</p>
+
+    <div class="proc-grid">
+      <div class="proc-step" id="ps1">
+        <div class="ps-n">01</div>
+        <div class="ps-ttl">Requirements Scoping</div>
+        <p class="ps-desc">30-minute technical brief. We map your lead flow, identify the highest-leverage automation point, and define the exact system architecture. You receive a written scope before we write a single line.</p>
+        <span class="ps-dur">30 min</span>
+      </div>
+      <div class="proc-step" id="ps2">
+        <div class="ps-n">02</div>
+        <div class="ps-ttl">System Architecture & Build</div>
+        <p class="ps-desc">We build in n8n with production standards from the first node — crash recovery, automated failure logging, Slack incident alerts, and fallback routing on every critical path. Tested with real data before handover.</p>
+        <span class="ps-dur">3–5 days</span>
+      </div>
+      <div class="proc-step" id="ps3">
+        <div class="ps-n">03</div>
+        <div class="ps-ttl">VPS Deployment & Integration</div>
+        <p class="ps-desc">Deployed to a hardened VPS for autonomous 24/7 operation — independent of any local machine. Full end-to-end integration testing across every connected platform before we sign off.</p>
+        <span class="ps-dur">1–2 days</span>
+      </div>
+      <div class="proc-step" id="ps4">
+        <div class="ps-n">04</div>
+        <div class="ps-ttl">Autonomous Operation</div>
+        <p class="ps-desc">The system runs without operator input. Priority leads surface automatically via Slack dispatch. Failure events are logged and alerted in real time. We remain on call for the first 30 days post-deployment.</p>
+        <span class="ps-dur">Ongoing</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ ABOUT ══════ -->
+<section id="about">
+  <div class="si">
+    <div class="slabel" id="sl-4">
+      <div class="sl-line"></div>
+      <span class="sl-txt">About</span>
+      <span class="sl-n">04 / 04</span>
+    </div>
+    <div class="about-grid">
+      <div class="ab-left" id="ab-l">
+        <div class="f-card">
+          <div class="f-hd">
+            <div class="f-av">A</div>
+            <div>
+              <div class="f-name">Arjit</div>
+              <div class="f-role">Founder · LeadForge AI · Raipur, India</div>
+            </div>
+            <div class="f-avail">● Available</div>
+          </div>
+          <div class="f-stats">
+            <div class="f-st"><span class="f-st-n">2</span><span class="f-st-l">Workflows</span></div>
+            <div class="f-st"><span class="f-st-n">2min</span><span class="f-st-l">Delivery</span></div>
+            <div class="f-st"><span class="f-st-n">0</span><span class="f-st-l">Manual work</span></div>
+            <div class="f-st"><span class="f-st-n">24/7</span><span class="f-st-l">Uptime</span></div>
+          </div>
+          <div class="f-stack">
+            <span class="s-pill">n8n</span><span class="s-pill">Gemini 2.5 Flash</span>
+            <span class="s-pill">Firecrawl</span><span class="s-pill">Puppeteer</span>
+            <span class="s-pill">HubSpot</span><span class="s-pill">GMass</span>
+            <span class="s-pill">Tally</span><span class="s-pill">QuickEmailVerify</span>
+            <span class="s-pill">Google Slides</span><span class="s-pill">Slack</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ab-right" id="ab-r">
+        <h2 class="ab-h">Built for C&amp;I solar.<br><em>Managed with intent.</em></h2>
+        <p class="ab-p">LeadForge AI is a specialist automation infrastructure firm built exclusively for commercial and industrial solar companies in the US and UK. We don't build residential funnels or run ads — we architect and retain the back-end revenue systems that make your sales team faster and your pipeline impossible to ignore.</p>
+        <ul class="ab-pts">
+          <li class="ab-pt"><span class="ap-n">01</span>Built exclusively for C&amp;I solar — IRA incentives, commercial utility rates, and B2B buyer psychology baked into every output.</li>
+          <li class="ab-pt"><span class="ap-n">02</span>Every deployment includes automated failure logging, cascading error recovery, and Slack incident dispatch on every critical node.</li>
+          <li class="ab-pt"><span class="ap-n">03</span>8/10+ quality floor enforced on all AI outputs — sub-threshold responses are automatically regenerated before delivery.</li>
+          <li class="ab-pt"><span class="ap-n">04</span>VPS-deployed infrastructure operates autonomously — no local machine dependency, no single point of human failure.</li>
+          <li class="ab-pt"><span class="ap-n">05</span>Direct access to the architect who built the system — not a support ticket, not an account manager.</li>
+        </ul>
+        <a href="#contact" class="btn-g">Work With Us →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ WHAT'S INCLUDED IN THE RETAINER ══════ -->
+<section id="retainer">
+  <div class="si">
+    <div class="slabel">
+      <div class="sl-line"></div>
+      <span class="sl-txt">The Retainer</span>
+    </div>
+    <h2 class="sh">
+      <span class="word"><span class="wi">What&nbsp;</span></span>
+      <span class="word"><span class="wi">the&nbsp;</span></span>
+      <span class="word"><span class="wi">monthly&nbsp;</span></span>
+      <span class="word"><span class="wi"><em>fee&nbsp;</em></span></span>
+      <span class="word"><span class="wi"><em>covers.</em></span></span>
+    </h2>
+    <p class="sp">No build fee that ends the relationship. You're not paying us to ship code once — you're paying us to keep it running, keep it accurate, and fix it the day something breaks.</p>
+
+    <div class="ret-grid">
+      <div class="ret-card">
+        <div class="ret-n">01 — Hosting</div>
+        <div class="ret-ttl">Dedicated Hosting &amp; Uptime</div>
+        <p class="ret-desc">We handle the servers. Your infrastructure runs on a monitored VPS with uptime tracking — not a laptop that needs to stay open, not a free-tier instance that sleeps.</p>
+      </div>
+      <div class="ret-card">
+        <div class="ret-n">02 — Optimization</div>
+        <div class="ret-ttl">Continuous Optimization</div>
+        <p class="ret-desc">We tweak the AI so it doesn't degrade. Prompts, scoring thresholds, and scraping logic are retuned monthly against real reply and conversion data — not left to rot after launch.</p>
+      </div>
+      <div class="ret-card">
+        <div class="ret-n">03 — Support</div>
+        <div class="ret-ttl">Break/Fix Support SLA</div>
+        <p class="ret-desc">If an API breaks, we fix it in hours. Every node has automated failure logging and Slack alerting — issues get caught and resolved before they cost you a lead.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ CONTACT ══════ -->
+<section id="contact">
+  <div class="si">
+    <div class="ct-grid">
+      <div class="ct-left" id="ct-l">
+        <div class="slabel" style="margin-bottom:2rem;opacity:1;transform:none">
+          <div class="sl-line" style="width:30px"></div>
+          <span class="sl-txt">Get In Touch</span>
+        </div>
+        <h2 class="ct-h">Let's scope<br><em>your retainer.</em></h2>
+        <p class="ct-p">Tell us your C&amp;I lead volume, your bottleneck, and your target outcome. We'll respond with a precise infrastructure scope, monthly investment, and SLA — within 24 hours. No pitch decks. No discovery theatre.
+        <div class="ct-info">
+          <a href="mailto:hello@leadforgeai.com" class="ct-lnk">
+            <span class="ct-icon">✉</span> hello@leadforgeai.com
+            <span class="ct-arr">→</span>
+          </a>
+          <a href="https://wa.me/91XXXXXXXXXX" class="ct-lnk">
+            <span class="ct-icon">◈</span> WhatsApp
+            <span class="ct-arr">→</span>
+          </a>
+          <a href="#" class="ct-lnk">
+            <span class="ct-icon">↗</span> LinkedIn
+            <span class="ct-arr">→</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="ct-right" id="ct-r">
+        <div class="tf-wrap">
+          <div class="tf-header">
+            <div class="tf-header-top">
+              <span class="tf-badge">
+                <span class="tf-badge-dot"></span>
+                Live Form
+              </span>
+              <span class="tf-est">Takes ~2 minutes</span>
+            </div>
+            <div class="tf-header-title">Get Your Free C&amp;I Solar Savings Report</div>
+            <div class="tf-header-sub">Answer 6 quick questions — receive your personalised 25-year C&amp;I ROI report in under 2 minutes.</div>
+            <div class="li-note">
+              <span class="li-dot"></span>
+              <span class="li-txt">Upon submission, our <b>AI will instantly analyze</b> your requirements in real-time.</span>
+            </div>
+          </div>
+          <div class="tf-embed-outer">
+            <div class="tf-embed-inner" id="tf-inner">
+              <div style="width:100%;display:flex;justify-content:center;">
+                <iframe
+                  src="https://tally.so/embed/b566lZ?hideTitle=1&transparentBackground=1&dynamicHeight=1"
+                  loading="lazy"
+                  width="100%"
+                  height="660"
+                  frameborder="0"
+                  marginheight="0"
+                  marginwidth="0"
+                  allow="fullscreen"
+                  style="display:block;width:100%;min-height:660px;border:none;margin:0 auto;"
+                  title="C&amp;I Solar Savings Report">
+                </iframe>
+              </div>
+            </div>
+          </div>
+          <div class="tf-footer">
+            <span class="tf-footer-icon">🔒</span>
+            <span class="tf-footer-txt">Your information is private and never shared.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ FOOTER ══════ -->
+<footer>
+  <div class="ft-logo">LeadForge<b>AI</b></div>
+  <div class="ft-copy">© 2025 LeadForge AI &nbsp;·&nbsp; Raipur, India &nbsp;·&nbsp; Built with n8n + Gemini</div>
+  <div class="ft-links">
+    <a href="#services">Services</a>
+    <a href="#process">Process</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </div>
+</footer>
+
+<script>
+gsap.registerPlugin(ScrollTrigger)
+
+// ══ Three.js background ═════════════════════════════════════════════════════
+const canvas = document.getElementById('bg')
+const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true})
+renderer.setSize(innerWidth,innerHeight)
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5))
+const scene = new THREE.Scene()
+const camera = new THREE.PerspectiveCamera(55,innerWidth/innerHeight,.1,1000)
+camera.position.z = 32
+const geoS = new THREE.SphereGeometry(.1,6,6)
+const nodes=[], NCount=60
+for(let i=0;i<NCount;i++){
+  const isG=i%4!==0
+  const m=new THREE.Mesh(geoS,new THREE.MeshBasicMaterial({color:isG?0xC4A45E:0x8B3A2A,transparent:true,opacity:isG?.4:.28}))
+  m.position.set((Math.random()-.5)*80,(Math.random()-.5)*50,(Math.random()-.5)*35)
+  m.userData={vx:(Math.random()-.5)*.014,vy:(Math.random()-.5)*.014,vz:(Math.random()-.5)*.006,p:Math.random()*Math.PI*2,isG}
+  scene.add(m);nodes.push(m)
+}
+const lg=new THREE.Group();scene.add(lg)
+const t1=new THREE.Mesh(new THREE.TorusGeometry(20,.03,6,100),new THREE.MeshBasicMaterial({color:0xC4A45E,transparent:true,opacity:.04}))
+t1.rotation.x=Math.PI/5;scene.add(t1)
+const t2=new THREE.Mesh(new THREE.TorusGeometry(28,.02,6,100),new THREE.MeshBasicMaterial({color:0x8B3A2A,transparent:true,opacity:.03}))
+t2.rotation.x=-Math.PI/7;t2.rotation.y=Math.PI/3;scene.add(t2)
+const oct=new THREE.Mesh(new THREE.OctahedronGeometry(6,1),new THREE.MeshBasicMaterial({color:0x9A7A42,wireframe:true,transparent:true,opacity:.045}))
+scene.add(oct)
+let mouse={x:0,y:0}
+window.addEventListener('mousemove',e=>{mouse.x=(e.clientX/innerWidth-.5)*.35;mouse.y=-(e.clientY/innerHeight-.5)*.35})
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)})
+let fr=0
+;(function anim(){
+  requestAnimationFrame(anim);fr++
+  nodes.forEach(n=>{
+    n.position.x+=n.userData.vx;n.position.y+=n.userData.vy;n.position.z+=n.userData.vz
+    if(Math.abs(n.position.x)>40)n.userData.vx*=-1
+    if(Math.abs(n.position.y)>25)n.userData.vy*=-1
+    if(Math.abs(n.position.z)>17)n.userData.vz*=-1
+    n.userData.p+=.011;n.scale.setScalar(1+Math.sin(n.userData.p)*.2)
+  })
+  if(fr%5===0){
+    lg.clear()
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      const d=nodes[i].position.distanceTo(nodes[j].position)
+      if(d<10){
+        const g=new THREE.BufferGeometry().setFromPoints([nodes[i].position.clone(),nodes[j].position.clone()])
+        lg.add(new THREE.Line(g,new THREE.LineBasicMaterial({color:nodes[i].userData.isG?0xC4A45E:0x8B3A2A,transparent:true,opacity:(1-d/10)*.065})))
+      }
+    }
+  }
+  t1.rotation.z+=.001;t2.rotation.y+=.0006;t2.rotation.z+=.0008
+  oct.rotation.x+=.0012;oct.rotation.y+=.0018
+  camera.position.x+=(mouse.x*7-camera.position.x)*.02
+  camera.position.y+=(mouse.y*4-camera.position.y)*.02
+  camera.lookAt(scene.position)
+  renderer.render(scene,camera)
+})()
+
+// ══ Custom cursor ════════════════════════════════════════════════════════════
+const cur=document.getElementById('cur'), curR=document.getElementById('cur-r')
+let mx=0,my=0,rx=0,ry=0
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'})
+;(function t(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;curR.style.left=rx+'px';curR.style.top=ry+'px';requestAnimationFrame(t)})()
+document.querySelectorAll('a,button,input,select,textarea').forEach(el=>{
+  el.addEventListener('mouseenter',()=>document.body.classList.add('hov'))
+  el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'))
+})
+
+// ══ Cinematic loader ═════════════════════════════════════════════════════════
+const loader=document.getElementById('loader')
+const lLogo=document.querySelector('.loader-logo')
+const lBarW=document.querySelector('.loader-bar-wrap')
+const lBar=document.getElementById('lbar')
+const lPct=document.getElementById('lpct')
+
+const tl=gsap.timeline()
+tl.to(lLogo,{opacity:1,y:0,duration:.8,ease:'power2.out'})
+  .to(lBarW,{opacity:1,duration:.4},'-=.4')
+  .to(lPct,{opacity:1,duration:.4},'-=.4')
+
+let pct=0
+const inc=setInterval(()=>{
+  pct+=Math.random()*12
+  if(pct>100)pct=100
+  lBar.style.width=pct+'%'
+  lPct.textContent=Math.floor(pct)+'%'
+  if(pct>=100){
+    clearInterval(inc)
+    setTimeout(revealPage,200)
+  }
+},80)
+
+function revealPage(){
+  gsap.timeline()
+    .to(lLogo,{opacity:0,y:-20,duration:.5,ease:'power2.in'})
+    .to(lBarW,{opacity:0,duration:.3},'-=.4')
+    .to(lPct,{opacity:0,duration:.3},'-=.4')
+    .to(loader,{scaleY:0,transformOrigin:'top center',duration:.8,ease:'power4.inOut'},'-=.2')
+    .set(loader,{display:'none'})
+    // Nav reveal
+    .to('nav',{opacity:1,y:0,duration:.6,ease:'power2.out'},'-=.3')
+    // Eyebrow
+    .to('.h-eye-line',{width:40,duration:.6,ease:'power2.out'},'-=.2')
+    .to('.h-eye-txt',{opacity:1,x:0,duration:.5,ease:'power2.out'},'-=.4')
+    // Hero headline lines
+    .to('#hero-h .line-inner',{
+      y:'0%',duration:.9,ease:'power4.out',stagger:.12
+    },'-=.3')
+    // Sub and buttons
+    .to('.hero-p',{opacity:1,y:0,duration:.7,ease:'power2.out'},'-=.4')
+    .to('.hero-btns',{opacity:1,y:0,duration:.6,ease:'power2.out'},'-=.5')
+    // Terminal slides in
+    .to('#hero-term',{opacity:1,x:0,duration:.8,ease:'power3.out'},'-=.5')
+    // Ticker
+    .to('#h-ticker',{opacity:1,duration:.5,ease:'power2.out'},'-=.3')
+}
+
+// ══ Nav scroll ═══════════════════════════════════════════════════════════════
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('stuck',scrollY>60)
+  // scroll progress line
+  const h=document.body.scrollHeight-innerHeight
+  document.getElementById('progress-line').style.width=(scrollY/h*100)+'%'
+})
+
+// ══ GSAP ScrollTrigger animations ═══════════════════════════════════════════
+
+// Helper: animate section label
+function animLabel(id){
+  const el=document.getElementById(id)
+  ScrollTrigger.create({trigger:el,start:'top 85%',onEnter:()=>{
+    gsap.to(el,{opacity:1,y:0,duration:.6,ease:'power2.out'})
+    gsap.to(el.querySelector('.sl-line'),{width:30,duration:.5,ease:'power2.out',delay:.1})
+  }})
+}
+// Helper: word reveal heading
+function animWords(id){
+  const el=document.getElementById(id)
+  ScrollTrigger.create({trigger:el,start:'top 80%',onEnter:()=>{
+    gsap.to(el.querySelectorAll('.wi'),{y:'0%',duration:.7,ease:'power3.out',stagger:.04})
+  }})
+}
+// Helper: paragraph
+function animP(id){
+  const el=document.getElementById(id)
+  ScrollTrigger.create({trigger:el,start:'top 85%',onEnter:()=>{
+    gsap.to(el,{opacity:1,y:0,duration:.65,ease:'power2.out'})
+  }})
+}
+
+;['sl-1','sl-2','sl-3','sl-4'].forEach(animLabel)
+;['sh-1','sh-2','sh-3'].forEach(animWords)
+;['sp-1','sp-2','sp-3'].forEach(animP)
+
+// Before/after
+ScrollTrigger.create({trigger:'#ba-1',start:'top 80%',onEnter:()=>{
+  gsap.to('#ba-1',{opacity:1,y:0,duration:.8,ease:'power2.out'})
+}})
+
+// Service cards stagger
+;['sc1','sc2','sc3'].forEach((id,i)=>{
+  ScrollTrigger.create({trigger:`#${id}`,start:'top 85%',onEnter:()=>{
+    gsap.to(`#${id}`,{opacity:1,y:0,duration:.7,ease:'power2.out',delay:i*.1})
+  }})
+})
+// Scroll hint
+ScrollTrigger.create({trigger:'#scroll-hint',start:'top 90%',onEnter:()=>{
+  gsap.to('#scroll-hint',{opacity:1,duration:.5})
+}})
+
+// Process steps
+;['ps1','ps2','ps3','ps4'].forEach((id,i)=>{
+  ScrollTrigger.create({trigger:`#${id}`,start:'top 85%',onEnter:()=>{
+    gsap.to(`#${id}`,{opacity:1,y:0,duration:.7,ease:'power2.out',delay:i*.08})
+  }})
+})
+
+// About
+ScrollTrigger.create({trigger:'#ab-l',start:'top 80%',onEnter:()=>{
+  gsap.to('#ab-l',{opacity:1,x:0,duration:.8,ease:'power2.out'})
+}})
+ScrollTrigger.create({trigger:'#ab-r',start:'top 80%',onEnter:()=>{
+  gsap.to('#ab-r',{opacity:1,x:0,duration:.8,ease:'power2.out',delay:.1})
+}})
+
+// Contact
+ScrollTrigger.create({trigger:'#ct-l',start:'top 80%',onEnter:()=>{
+  gsap.to('#ct-l',{opacity:1,y:0,duration:.7,ease:'power2.out'})
+}})
+ScrollTrigger.create({trigger:'#ct-r',start:'top 80%',onEnter:()=>{
+  gsap.to('#ct-r',{opacity:1,y:0,duration:.7,ease:'power2.out',delay:.1})
+}})
+
+// ══ Counters ══════════════════════════════════════════════════════════════════
+const ctrObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting||e.target.dataset.done)return
+    e.target.dataset.done='1'
+    const tgt=parseInt(e.target.dataset.t)
+    const sfx=e.target.dataset.s||''
+    gsap.to({n:0},{n:tgt,duration:1.6,ease:'power2.out',
+      onUpdate:function(){e.target.textContent=Math.floor(this.targets()[0].n)+sfx}
+    })
+  })
+},{threshold:.6})
+document.querySelectorAll('.ctr').forEach(el=>ctrObs.observe(el))
+
+// ══ Draggable service track ═══════════════════════════════════════════════════
+const track=document.getElementById('svc-track')
+let drag=false,startX=0,sl=0
+track.addEventListener('mousedown',e=>{drag=true;startX=e.pageX-track.offsetLeft;sl=track.scrollLeft;track.classList.add('g')})
+document.addEventListener('mouseup',()=>{drag=false;track.classList.remove('g')})
+track.addEventListener('mousemove',e=>{if(!drag)return;e.preventDefault();track.scrollLeft=sl-(e.pageX-track.offsetLeft-startX)*1.5})
+
+// ══ Terminal 3D tilt ══════════════════════════════════════════════════════════
+const termCard=document.getElementById('term-card')
+if(termCard){
+  document.addEventListener('mousemove',e=>{
+    const cx=innerWidth/2,cy=innerHeight/2
+    const dx=(e.clientX-cx)/cx,dy=(e.clientY-cy)/cy
+    termCard.style.transform=`perspective(900px) rotateX(${-dy*4}deg) rotateY(${dx*3}deg)`
+  })
+}
+
+// ══ Service card 3D tilt ══════════════════════════════════════════════════════
+document.querySelectorAll('.svc-card').forEach(c=>{
+  c.addEventListener('mousemove',e=>{
+    const r=c.getBoundingClientRect()
+    const x=(e.clientX-r.left-r.width/2)/25
+    const y=-(e.clientY-r.top-r.height/2)/25
+    c.style.transform=`translateY(-4px) perspective(600px) rotateX(${y}deg) rotateY(${x}deg)`
+  })
+  c.addEventListener('mouseleave',()=>{c.style.transform=''})
+})
+
+// ══ Process step spotlight ════════════════════════════════════════════════════
+document.querySelectorAll('.proc-step').forEach(s=>{
+  s.addEventListener('mouseenter',()=>{
+    gsap.to(document.querySelectorAll('.proc-step'),{opacity:.35,duration:.3})
+    gsap.to(s,{opacity:1,duration:.3})
+  })
+  s.addEventListener('mouseleave',()=>{
+    gsap.to(document.querySelectorAll('.proc-step'),{opacity:1,duration:.3})
+  })
+})
+
+// ══ Magnetic buttons ══════════════════════════════════════════════════════════
+document.querySelectorAll('.btn-g,.n-cta').forEach(btn=>{
+  btn.addEventListener('mousemove',e=>{
+    const r=btn.getBoundingClientRect()
+    gsap.to(btn,{x:(e.clientX-r.left-r.width/2)*.28,y:(e.clientY-r.top-r.height/2)*.28,duration:.3,ease:'power2.out'})
+  })
+  btn.addEventListener('mouseleave',()=>{
+    gsap.to(btn,{x:0,y:0,duration:.5,ease:'elastic.out(1,.4)'})
+  })
+})
+
+// ══ Nav scroll ════════════════════════════════════════════════════════════════
+ScrollTrigger.create({
+  start:'top -80',end:'max',
+  onUpdate:self=>{
+    document.getElementById('nav').classList.toggle('stuck',self.scroll()>80)
+  }
+})
+
+// ══ Typeform iframe loaded ════════════════════════════════════════════════════
+// Loading spinner hides automatically via iframe onload attribute
+</script>
+<!-- Tally loads via iframe — no external script needed -->
+
+<!-- ══════ FLOATING FORM BUTTON ══════ -->
+<button id="form-fab" aria-label="Get Solar Blueprint">
+  <span class="fab-dot"></span>
+  Get Free Blueprint
+</button>
+
+<!-- ══════ FORM MODAL ══════ -->
+<div id="form-modal" role="dialog" aria-modal="true" aria-label="Solar Savings Blueprint">
+  <div id="form-panel">
+    <div class="fmod-header">
+      <div>
+        <div class="fmod-badge">
+          <span class="fmod-badge-dot"></span>
+          Free · Under 2 Minutes
+        </div>
+        <div class="fmod-title">Get Your C&amp;I Solar Savings Report</div>
+        <div class="fmod-sub">Answer 6 questions. Receive your personalised 25-year ROI report instantly.</div>
+      </div>
+      <button class="fmod-close" id="form-close" aria-label="Close">✕</button>
+    </div>
+    <div class="fmod-body">
+      <iframe
+        id="tally-frame"
+        src=""
+        data-src="https://tally.so/embed/b566lZ?hideTitle=1&transparentBackground=1&dynamicHeight=1"
+        loading="lazy"
+        frameborder="0"
+        marginheight="0"
+        marginwidth="0"
+        allow="fullscreen"
+        title="C&amp;I Solar Savings Report">
+      </iframe>
+    </div>
+    <div class="fmod-footer">
+      <span>🔒</span>
+      <span class="fmod-footer-txt">Your information is private and never shared.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ FLOATING FORM SCRIPT ══════ -->
+<script>
+(function(){
+  const fab   = document.getElementById('form-fab');
+  const modal = document.getElementById('form-modal');
+  const close = document.getElementById('form-close');
+  const frame = document.getElementById('tally-frame');
+  let loaded  = false;
+
+  function openModal() {
+    // Lazy load iframe only on first open
+    if (!loaded) {
+      frame.src = frame.dataset.src;
+      loaded = true;
+    }
+    modal.classList.add('visible');
+    fab.classList.add('open');
+    fab.textContent = '✕  Close';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.classList.remove('visible');
+    fab.classList.remove('open');
+    fab.innerHTML = '<span class="fab-dot"></span> Get Free Blueprint';
+    document.body.style.overflow = '';
+  }
+
+  fab.addEventListener('click', function(){
+    modal.classList.contains('visible') ? closeModal() : openModal();
+  });
+
+  close.addEventListener('click', closeModal);
+
+  // Close on backdrop click
+  modal.addEventListener('click', function(e){
+    if (e.target === modal) closeModal();
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && modal.classList.contains('visible')) closeModal();
+  });
+})();
+</script>
+
+<!--
+  ═══════════════════════════════════════════════════════════════════
+  LEADFORGE AI — TALLY SUBMISSION LOADING WIDGET  (v1.3, portable)
+  ═══════════════════════════════════════════════════════════════════
+  WHAT THIS IS
+  A drop-in "labor illusion" loading screen. When a Tally form on the
+  page is submitted, this widget intercepts the submission event and
+  shows a full-screen sequence of steps ("Analyzing your commercial
+  property...", "Calculating subsidy...", etc.) before revealing a
+  completion state. Makes instant/async backend processing feel real.
+
+  HOW TO INSTALL ON A NEW CLIENT SITE (3 steps, no other code changes)
+  1. Paste this entire block anywhere before the closing </body> tag.
+  2. Edit ONLY the config object below (steps, timing, colors, text).
+  3. Done. It listens for Tally's own submission event globally — no
+     iframe IDs to match, no other page wiring, nothing else changes.
+
+  WHY IT'S SAFE TO DROP INTO ANY SITE
+  - All CSS is scoped under the .lfw- prefix — cannot collide with
+    the host site's existing styles.
+  - Runs as a single self-invoking function — leaves only two global
+    references behind: window.LFLoader (manual show/hide for testing)
+    and window.__LF_LOADER_LOADED__ (the double-inclusion guard).
+  - Guards against being pasted twice on the same page (a common
+    real-world mistake: once via header, once via footer/tag manager).
+  - Checks postMessage origin against tally.so by default, rejecting
+    spoofed events from ad iframes or unrelated third-party scripts.
+  - No external dependencies. No frameworks. Vanilla JS + CSS only.
+
+  v1.3 CHANGES FROM v1.2
+  - stepDuration shortened 1400ms → 1000ms. Each step's percentage
+    counter now climbs 0→99 and hands off to the checkmark within
+    exactly one second — snappier and more premium-feeling, while the
+    v1.2 fix (never showing 100% while still spinning) still holds,
+    since the cap logic is unchanged — only the total duration is.
+
+  v1.2 CHANGES FROM v1.1
+  - Added a live percentage counter to the active step (0% → 99%,
+    tied to real elapsed time via requestAnimationFrame) so the screen
+    reads as "actively computing" rather than "instantly checked off."
+    The number disappears the instant a step completes and hands off
+    to the checkmark — it never shows a stale 100% next to a spinner.
+  - Completion subtext now tells the prospect to check spam/promotions,
+    since multi-link report emails commonly get filtered there.
+
+  v1.1 CHANGES FROM v1.0
+  - Added double-inclusion guard (window.__LF_LOADER_LOADED__)
+  - Added restrictToTallyOrigin origin check (default: on)
+  - Removed unused iframeMatchString config key (was dead code —
+    the widget triggers on Tally's global postMessage event, not by
+    inspecting iframe src, so no iframe matching was ever needed)
+  - Default step copy updated to C&I solar language
+  ═══════════════════════════════════════════════════════════════════
+-->
+<script>
+(function () {
+  'use strict';
+
+  // ═══════════════════════════════════════════════════════════════
+  // DOUBLE-INCLUSION GUARD
+  // If a webmaster pastes this script twice (header + footer is the
+  // classic mistake), this stops the SECOND copy cold. Without this,
+  // two independent postMessage listeners both fire on one submit,
+  // running two overlapping step sequences that visually glitch.
+  // ═══════════════════════════════════════════════════════════════
+  if (window.__LF_LOADER_LOADED__) return;
+  window.__LF_LOADER_LOADED__ = true;
+
+  // ═══════════════════════════════════════════════════════════════
+  // CONFIG — this is the ONLY section you edit per client
+  // ═══════════════════════════════════════════════════════════════
+  var LF_LOADER_CONFIG = {
+    // Sequential steps shown while "processing" the submission.
+    // Add, remove, or reorder freely — the widget adapts automatically.
+    steps: [
+      'Analyzing your commercial property…',
+      'Pulling utility rate data…',
+      'Calculating C&I system size…',
+      'Calculating subsidy eligibility…',
+      'Generating your personalised report…'
+    ],
+
+    // How long each step stays "active" before moving to the next (ms).
+    // 1000ms = the percentage counter genuinely completes its 0→99 climb
+    // and the checkmark lands within exactly one second — fast, precise,
+    // no dead air. (Do not set this much lower than ~700ms — the counter
+    // needs enough real time to visibly climb, or it reads as instant
+    // rather than "calculating," which defeats the point of the counter.)
+    stepDuration: 1000,
+
+    // Shown after the last step completes.
+    completeTitle: 'Your report is on its way.',
+    completeSubtext: "Check your inbox in the next few minutes. If it doesn't appear, check your spam or promotions folder — some email firewalls flag reports with multiple links.",
+
+    // Brand colors — override per client. Falls back to gold/dark if unset.
+    accentColor: '#c4a45e',
+    bgColor: '#0c0b09',
+    textColor: '#f4f1ea',
+    mutedColor: '#7a756a',
+
+    // Font — matches this site's own font (DM Sans) so the loading
+    // screen feels like part of the page, not a generic overlay.
+    fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+
+    // If true, only messages from tally.so (or its subdomains) can
+    // trigger the overlay — blocks spoofed messages from ad iframes
+    // or other third-party scripts on the same page. Set to false ONLY
+    // if the client uses Tally Pro with a custom embed domain, since
+    // that changes the postMessage origin away from tally.so.
+    restrictToTallyOrigin: true,
+
+    // If true, clicking outside the overlay does nothing (recommended —
+    // this is a "labor illusion" screen, not a dismissible modal).
+    lockOverlay: true
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // WIDGET CORE — no need to edit below this line
+  // ═══════════════════════════════════════════════════════════════
+  var cfg = LF_LOADER_CONFIG;
+  var currentStepIndex = -1;
+  var stepTimer = null;
+  var pctAnimFrame = null;
+
+  // Ticks a step's percentage readout from 0 up to 99 over `duration` ms,
+  // tied to real elapsed time (not a naive fixed increment) so it stays
+  // accurate regardless of frame rate or tab throttling. Caps at 99 —
+  // it only reaches 100 implicitly when the step flips to "done" and the
+  // checkmark replaces the number, so it never visually says "100%" while
+  // still showing a spinner (which is exactly the "already finished but
+  // still spinning" mismatch this whole feature exists to avoid).
+  function animateStepPercent(stepEl, duration) {
+    if (pctAnimFrame) cancelAnimationFrame(pctAnimFrame);
+    var pctEl = stepEl.querySelector('[data-pct]');
+    if (!pctEl) return;
+    var start = Date.now();
+
+    function tick() {
+      var elapsed = Date.now() - start;
+      var pct = Math.min(99, Math.floor((elapsed / duration) * 100));
+      pctEl.textContent = pct + '%';
+      if (elapsed < duration) {
+        pctAnimFrame = requestAnimationFrame(tick);
+      }
+    }
+    tick();
+  }
+
+  function injectStyles() {
+    if (document.getElementById('lfw-styles')) return;
+    var css = [
+      '.lfw-overlay{position:fixed;inset:0;z-index:99999;display:none;',
+      'align-items:center;justify-content:center;padding:1.5rem;',
+      'background:' + cfg.bgColor + 'f2;backdrop-filter:blur(10px);',
+      '-webkit-backdrop-filter:blur(10px);',
+      'font-family:' + cfg.fontFamily + ';',
+      'opacity:0;transition:opacity .35s ease;box-sizing:border-box}',
+
+      '.lfw-overlay.lfw-visible{display:flex;opacity:1}',
+
+      '.lfw-panel{width:100%;max-width:440px;text-align:left;box-sizing:border-box}',
+      '.lfw-panel *{box-sizing:border-box}',
+
+      '.lfw-badge{display:flex;align-items:center;gap:.5rem;margin-bottom:1.75rem}',
+      '.lfw-badge-dot{width:7px;height:7px;border-radius:50%;',
+      'background:' + cfg.accentColor + ';flex-shrink:0;',
+      'animation:lfw-pulse 1.6s ease infinite}',
+      '.lfw-badge-txt{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;',
+      'color:' + cfg.accentColor + ';font-weight:500}',
+
+      '@keyframes lfw-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(1.7)}}',
+
+      '.lfw-steps{display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem}',
+      '.lfw-step{display:flex;align-items:center;gap:.85rem;opacity:.32;',
+      'transition:opacity .3s ease}',
+      '.lfw-step.lfw-active{opacity:1}',
+      '.lfw-step.lfw-done{opacity:.65}',
+
+      '.lfw-step-icon{width:20px;height:20px;flex-shrink:0;border-radius:50%;',
+      'border:1.5px solid ' + cfg.mutedColor + ';position:relative;',
+      'display:flex;align-items:center;justify-content:center;transition:all .3s ease}',
+      '.lfw-step.lfw-active .lfw-step-icon{border-color:' + cfg.accentColor + '}',
+      '.lfw-step.lfw-done .lfw-step-icon{border-color:' + cfg.accentColor + ';',
+      'background:' + cfg.accentColor + '}',
+
+      '.lfw-spinner{width:10px;height:10px;border-radius:50%;',
+      'border:1.5px solid transparent;border-top-color:' + cfg.accentColor + ';',
+      'animation:lfw-spin .7s linear infinite}',
+      '@keyframes lfw-spin{to{transform:rotate(360deg)}}',
+
+      '.lfw-check{width:10px;height:7px;opacity:0;transition:opacity .2s ease}',
+      '.lfw-step.lfw-done .lfw-check{opacity:1}',
+      '.lfw-step.lfw-done .lfw-spinner{display:none}',
+
+      '.lfw-step-txt{font-size:.85rem;font-weight:400;color:' + cfg.textColor + ';',
+      'line-height:1.4}',
+
+      '.lfw-step-pct{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;',
+      'font-size:.7rem;color:' + cfg.accentColor + ';margin-left:auto;',
+      'min-width:2.4em;text-align:right;opacity:0;transition:opacity .2s ease;',
+      'flex-shrink:0;letter-spacing:.02em}',
+      '.lfw-step.lfw-active .lfw-step-pct{opacity:1}',
+
+      '.lfw-progress-track{width:100%;height:2px;background:' + cfg.mutedColor + '33;',
+      'border-radius:2px;overflow:hidden;margin-bottom:2rem}',
+      '.lfw-progress-fill{height:100%;background:' + cfg.accentColor + ';',
+      'width:0%;transition:width .4s ease}',
+
+      '.lfw-complete{display:none;text-align:center;padding-top:.5rem}',
+      '.lfw-complete.lfw-show{display:block}',
+      '.lfw-complete-icon{width:44px;height:44px;border-radius:50%;',
+      'background:' + cfg.accentColor + ';display:flex;align-items:center;',
+      'justify-content:center;margin:0 auto 1.25rem}',
+      '.lfw-complete-title{font-size:1.05rem;font-weight:500;',
+      'color:' + cfg.textColor + ';margin-bottom:.4rem}',
+      '.lfw-complete-sub{font-size:.78rem;color:' + cfg.mutedColor + ';line-height:1.6}',
+
+      '.lfw-hidden{display:none!important}'
+    ].join('');
+
+    var style = document.createElement('style');
+    style.id = 'lfw-styles';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  function buildOverlay() {
+    if (document.getElementById('lfw-overlay')) return;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'lfw-overlay';
+    overlay.className = 'lfw-overlay';
+
+    var stepsHtml = cfg.steps.map(function (label, i) {
+      return (
+        '<div class="lfw-step" data-step="' + i + '">' +
+          '<span class="lfw-step-icon">' +
+            '<span class="lfw-spinner"></span>' +
+            '<svg class="lfw-check" viewBox="0 0 10 7" fill="none">' +
+              '<path d="M1 3.5L3.5 6L9 1" stroke="' + cfg.bgColor + '" stroke-width="1.6" ' +
+              'stroke-linecap="round" stroke-linejoin="round"/>' +
+            '</svg>' +
+          '</span>' +
+          '<span class="lfw-step-txt">' + label + '</span>' +
+          '<span class="lfw-step-pct" data-pct>0%</span>' +
+        '</div>'
+      );
+    }).join('');
+
+    overlay.innerHTML =
+      '<div class="lfw-panel">' +
+        '<div class="lfw-badge">' +
+          '<span class="lfw-badge-dot"></span>' +
+          '<span class="lfw-badge-txt">Processing your submission</span>' +
+        '</div>' +
+        '<div class="lfw-progress-track"><div class="lfw-progress-fill" id="lfw-progress"></div></div>' +
+        '<div class="lfw-steps" id="lfw-steps">' + stepsHtml + '</div>' +
+        '<div class="lfw-complete" id="lfw-complete">' +
+          '<div class="lfw-complete-icon">' +
+            '<svg width="18" height="14" viewBox="0 0 18 14" fill="none">' +
+              '<path d="M1 7L6.5 12.5L17 1.5" stroke="' + cfg.bgColor + '" stroke-width="2" ' +
+              'stroke-linecap="round" stroke-linejoin="round"/>' +
+            '</svg>' +
+          '</div>' +
+          '<div class="lfw-complete-title">' + cfg.completeTitle + '</div>' +
+          '<div class="lfw-complete-sub">' + cfg.completeSubtext + '</div>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    if (!cfg.lockOverlay) {
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) hide();
+      });
+    }
+  }
+
+  function setStep(index) {
+    var stepEls = document.querySelectorAll('#lfw-steps .lfw-step');
+    stepEls.forEach(function (el, i) {
+      el.classList.remove('lfw-active', 'lfw-done');
+      var pctEl = el.querySelector('[data-pct]');
+      if (i < index) {
+        el.classList.add('lfw-done');
+        if (pctEl) pctEl.textContent = '';
+      }
+      if (i === index) {
+        el.classList.add('lfw-active');
+        if (pctEl) pctEl.textContent = '0%';
+        animateStepPercent(el, cfg.stepDuration);
+      }
+    });
+    var progress = document.getElementById('lfw-progress');
+    if (progress) {
+      var pct = Math.min(100, Math.round(((index + 1) / cfg.steps.length) * 100));
+      progress.style.width = pct + '%';
+    }
+  }
+
+  function runSequence() {
+    currentStepIndex = 0;
+    setStep(0);
+
+    if (stepTimer) clearInterval(stepTimer);
+    stepTimer = setInterval(function () {
+      currentStepIndex++;
+      if (currentStepIndex >= cfg.steps.length) {
+        clearInterval(stepTimer);
+        stepEls_markAllDone();
+        showComplete();
+        return;
+      }
+      setStep(currentStepIndex);
+    }, cfg.stepDuration);
+  }
+
+  function stepEls_markAllDone() {
+    if (pctAnimFrame) cancelAnimationFrame(pctAnimFrame);
+    var stepEls = document.querySelectorAll('#lfw-steps .lfw-step');
+    stepEls.forEach(function (el) {
+      el.classList.remove('lfw-active');
+      el.classList.add('lfw-done');
+      var pctEl = el.querySelector('[data-pct]');
+      if (pctEl) pctEl.textContent = '';
+    });
+    var progress = document.getElementById('lfw-progress');
+    if (progress) progress.style.width = '100%';
+  }
+
+  function showComplete() {
+    var stepsWrap = document.getElementById('lfw-steps');
+    var complete = document.getElementById('lfw-complete');
+    var progressTrack = document.querySelector('.lfw-progress-track');
+    if (stepsWrap) stepsWrap.classList.add('lfw-hidden');
+    if (progressTrack) progressTrack.classList.add('lfw-hidden');
+    if (complete) complete.classList.add('lfw-show');
+  }
+
+  function show() {
+    injectStyles();
+    buildOverlay();
+    // reset state in case of repeat testing
+    var stepsWrap = document.getElementById('lfw-steps');
+    var complete = document.getElementById('lfw-complete');
+    var progressTrack = document.querySelector('.lfw-progress-track');
+    if (stepsWrap) stepsWrap.classList.remove('lfw-hidden');
+    if (progressTrack) progressTrack.classList.remove('lfw-hidden');
+    if (complete) complete.classList.remove('lfw-show');
+
+    var overlay = document.getElementById('lfw-overlay');
+    overlay.classList.add('lfw-visible');
+    document.body.style.overflow = 'hidden';
+    runSequence();
+  }
+
+  function hide() {
+    var overlay = document.getElementById('lfw-overlay');
+    if (overlay) overlay.classList.remove('lfw-visible');
+    document.body.style.overflow = '';
+    if (stepTimer) clearInterval(stepTimer);
+    if (pctAnimFrame) cancelAnimationFrame(pctAnimFrame);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // TRIGGER — listens for Tally's postMessage submission event
+  // Handles both object and stringified-JSON payload shapes, since
+  // different embed contexts deliver the event differently. Origin
+  // is checked first (cheap, no parsing) before touching event.data.
+  // ═══════════════════════════════════════════════════════════════
+  window.addEventListener('message', function (event) {
+    if (cfg.restrictToTallyOrigin && event.origin.indexOf('tally.so') === -1) {
+      return;
+    }
+
+    var data = event.data;
+
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch (e) { return; }
+    }
+    if (!data || typeof data !== 'object') return;
+
+    if (data.event === 'Tally.FormSubmitted') {
+      show();
+    }
+  });
+
+  // Public API — lets you manually trigger/hide for testing,
+  // e.g. from the browser console: LFLoader.show()
+  window.LFLoader = { show: show, hide: hide, config: cfg };
+
+})();
+</script>
+
+</body>
+</html>
